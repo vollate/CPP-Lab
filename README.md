@@ -1,4 +1,1 @@
-# A lab that contain kinds of cpp projects
-
-> practice makes perfect
-
+# Several cpp practice projects
