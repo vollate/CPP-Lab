@@ -5,23 +5,59 @@
 
 namespace lf_lab {
 
-template <typename DataType> class Queue {
+template <typename DataType> class ListQueue {
+private:
+  struct Node;
+
 public:
-  Queue() : head_(&guard_), tail_(&guard_) {}
-  Queue(const Queue &) = delete;
-  Queue &operator=(const Queue &) = delete;
-  ~Queue() { // TODO
+  ListQueue() : head_(&head_guard_), tail_(&head_guard_) {
+    head_guard_.next_.store(&head_guard_);
   }
-  void enqueue(const DataType &data) {}
-  void enqueue(DataType &&data) {}
+  ListQueue(const ListQueue &) = delete;
+  ListQueue &operator=(const ListQueue &) = delete;
+  ~ListQueue() { // TODO
+  }
+
+  void enqueue(DataType &&data) {
+    Node *new_tail = new Node(std::forward(data));
+    do {
+      Node *expected = nullptr;
+      Node *old_tail = tail_.load();
+      if (old_tail->next_.compare_exchange_strong(expected, new_tail)) {
+        tail_.store(new_tail);
+        return;
+      } else {
+        tail_.compare_exchange_strong(old_tail, expected);
+      }
+    } while (true);
+  }
+
+  auto dequeue() -> DataType * {
+    Node *to_pop = nullptr;
+    do {
+      to_pop = head_->next_.load();
+      if (to_pop == head_) { // queue empty
+        return nullptr;
+      }
+      Node *second_node_ = to_pop->next_.load();
+      if (head_->next_.compare_exchange_strong(to_pop, second_node_)) {
+        return to_pop;
+      }
+    } while (true);
+  }
 
 private:
   struct Node {
-    std::shared_ptr<DataType> data;
+    DataType *data_ = nullptr;
+    std::atomic<Node *> next_ = nullptr;
+
+    Node() = default;
+    Node(DataType &&data) : data_(std::forward(data)) {}
+    ~Node() {}
   };
 
-  Node guard_;
-  std::atomic<Node *> head_;
+  Node head_guard_;
+  Node *head_;
   std::atomic<Node *> tail_;
 };
 
