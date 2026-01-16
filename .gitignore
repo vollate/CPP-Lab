@@ -31,6 +31,7 @@
 *.out
 *.app
 
+.idea/
 build/
 .cache/
 compile_commands.json
