@@ -25,7 +25,12 @@ elseif(UNIX)
   endif()
 endif()
 
-set(CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg_installed/${VCPKG_TRIPLET}")
+set(CMAKE_PREFIX_PATH
+    "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg_installed/${VCPKG_TRIPLET}")
+
+set(CXX_COMPILE_OPTIONS
+    "-Wall -Wextra -Wpedantic -Werror -fsanitize=thread -fsanitize-address-use-after-scope"
+)
 
 enable_testing()
 find_package(GTest CONFIG REQUIRED)
