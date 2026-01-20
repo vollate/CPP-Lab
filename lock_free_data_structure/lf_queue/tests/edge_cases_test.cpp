@@ -1,10 +1,10 @@
 #include "lf_queue.hpp"
 
-#include <gtest/gtest.h>
 #include <atomic>
+#include <gtest/gtest.h>
+#include <random>
 #include <thread>
 #include <vector>
-#include <random>
 
 TEST(EdgeCases, StressTest1MillionOps) {
   lf_lab::LFQueue<int> queue;
@@ -40,7 +40,7 @@ TEST(EdgeCases, StressTest1MillionOps) {
     });
   }
 
-  for (auto& t : threads) {
+  for (auto &t : threads) {
     t.join();
   }
 
@@ -145,7 +145,7 @@ TEST(EdgeCases, ClearWhileConcurrent) {
     queue.clear();
   });
 
-  for (auto& t : threads) {
+  for (auto &t : threads) {
     t.join();
   }
 
@@ -186,7 +186,7 @@ TEST(EdgeCases, MemoryPressure) {
     });
   }
 
-  for (auto& t : threads) {
+  for (auto &t : threads) {
     t.join();
   }
 

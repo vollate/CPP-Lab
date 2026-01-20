@@ -1,12 +1,12 @@
 #include "lf_queue.hpp"
 
-#include <benchmark/benchmark.h>
-#include <thread>
-#include <vector>
-#include <atomic>
 #include <algorithm>
+#include <atomic>
+#include <benchmark/benchmark.h>
 #include <cstdio>
 #include <queue>
+#include <thread>
+#include <vector>
 
 namespace basic_lab {
 
@@ -80,9 +80,9 @@ private:
 
 template <typename DataType> UnsafeQueue<DataType>::~UnsafeQueue() { clear(); }
 
-}
+} // namespace basic_lab
 
-static void BM_SingleThreadEnqueue(benchmark::State& state) {
+static void BM_SingleThreadEnqueue(benchmark::State &state) {
   lf_lab::LFQueue<int> queue;
   for (auto _ : state) {
     for (int i = 0; i < 1000; ++i) {
@@ -96,7 +96,7 @@ static void BM_SingleThreadEnqueue(benchmark::State& state) {
   state.SetItemsProcessed(state.iterations() * 1000);
 }
 
-static void BM_SingleThreadDequeue(benchmark::State& state) {
+static void BM_SingleThreadDequeue(benchmark::State &state) {
   lf_lab::LFQueue<int> queue;
   for (auto _ : state) {
     state.PauseTiming();
@@ -113,7 +113,7 @@ static void BM_SingleThreadDequeue(benchmark::State& state) {
   state.SetItemsProcessed(state.iterations() * 1000);
 }
 
-static void BM_SingleThreadMixed(benchmark::State& state) {
+static void BM_SingleThreadMixed(benchmark::State &state) {
   lf_lab::LFQueue<int> queue;
   for (auto _ : state) {
     state.PauseTiming();
@@ -132,7 +132,7 @@ static void BM_SingleThreadMixed(benchmark::State& state) {
   state.SetItemsProcessed(state.iterations() * 1000);
 }
 
-static void BM_ConcurrentEnqueue(benchmark::State& state) {
+static void BM_ConcurrentEnqueue(benchmark::State &state) {
   const int num_threads = state.threads();
   const int ops_per_thread = 10000;
   std::atomic<int> ready_flag(0);
@@ -142,17 +142,18 @@ static void BM_ConcurrentEnqueue(benchmark::State& state) {
     lf_lab::LFQueue<int> queue;
 
     for (int t = 0; t < num_threads; ++t) {
-      threads.emplace_back([&queue, t, ops_per_thread, &ready_flag, &num_threads]() {
-        while (ready_flag.load(std::memory_order_acquire) < num_threads) {
-          ready_flag.fetch_add(1, std::memory_order_release);
-        }
-        for (int i = 0; i < ops_per_thread; ++i) {
-          queue.enqueue(t * ops_per_thread + i);
-        }
-      });
+      threads.emplace_back(
+          [&queue, t, ops_per_thread, &ready_flag, &num_threads]() {
+            while (ready_flag.load(std::memory_order_acquire) < num_threads) {
+              ready_flag.fetch_add(1, std::memory_order_release);
+            }
+            for (int i = 0; i < ops_per_thread; ++i) {
+              queue.enqueue(t * ops_per_thread + i);
+            }
+          });
     }
 
-    for (auto& thread : threads) {
+    for (auto &thread : threads) {
       thread.join();
     }
     threads.clear();
@@ -163,7 +164,7 @@ static void BM_ConcurrentEnqueue(benchmark::State& state) {
   state.SetItemsProcessed(state.iterations() * num_threads * ops_per_thread);
 }
 
-static void BM_ConcurrentDequeue(benchmark::State& state) {
+static void BM_ConcurrentDequeue(benchmark::State &state) {
   const int num_threads = state.threads();
   const int ops_per_thread = 10000;
   const int total_elements = num_threads * ops_per_thread;
@@ -178,22 +179,23 @@ static void BM_ConcurrentDequeue(benchmark::State& state) {
     }
 
     for (int t = 0; t < num_threads; ++t) {
-      threads.emplace_back([&queue, t, ops_per_thread, &ready_flag, &num_threads]() {
-        while (ready_flag.load(std::memory_order_acquire) < num_threads) {
-          ready_flag.fetch_add(1, std::memory_order_release);
-        }
-        int value;
-        int dequeued = 0;
-        while (dequeued < ops_per_thread) {
-          if (queue.dequeue(value)) {
-            benchmark::DoNotOptimize(value);
-            dequeued++;
-          }
-        }
-      });
+      threads.emplace_back(
+          [&queue, t, ops_per_thread, &ready_flag, &num_threads]() {
+            while (ready_flag.load(std::memory_order_acquire) < num_threads) {
+              ready_flag.fetch_add(1, std::memory_order_release);
+            }
+            int value;
+            int dequeued = 0;
+            while (dequeued < ops_per_thread) {
+              if (queue.dequeue(value)) {
+                benchmark::DoNotOptimize(value);
+                dequeued++;
+              }
+            }
+          });
     }
 
-    for (auto& thread : threads) {
+    for (auto &thread : threads) {
       thread.join();
     }
     threads.clear();
@@ -204,7 +206,7 @@ static void BM_ConcurrentDequeue(benchmark::State& state) {
   state.SetItemsProcessed(state.iterations() * num_threads * ops_per_thread);
 }
 
-static void BM_MixedProducerConsumer(benchmark::State& state) {
+static void BM_MixedProducerConsumer(benchmark::State &state) {
   const int num_threads = state.threads();
   const int ops_per_thread = 5000;
   const int num_producers = num_threads / 2;
@@ -216,35 +218,37 @@ static void BM_MixedProducerConsumer(benchmark::State& state) {
     lf_lab::LFQueue<int> queue;
 
     for (int t = 0; t < num_producers; ++t) {
-      threads.emplace_back([&queue, t, ops_per_thread, &ready_flag, &num_threads]() {
-        while (ready_flag.load(std::memory_order_acquire) < num_threads) {
-          ready_flag.fetch_add(1, std::memory_order_release);
-        }
-        for (int i = 0; i < ops_per_thread; ++i) {
-          queue.enqueue(t * ops_per_thread + i);
-        }
-      });
+      threads.emplace_back(
+          [&queue, t, ops_per_thread, &ready_flag, &num_threads]() {
+            while (ready_flag.load(std::memory_order_acquire) < num_threads) {
+              ready_flag.fetch_add(1, std::memory_order_release);
+            }
+            for (int i = 0; i < ops_per_thread; ++i) {
+              queue.enqueue(t * ops_per_thread + i);
+            }
+          });
     }
 
     for (int t = 0; t < num_consumers; ++t) {
-      threads.emplace_back([&queue, t, ops_per_thread, &ready_flag, &num_threads]() {
-        while (ready_flag.load(std::memory_order_acquire) < num_threads) {
-          ready_flag.fetch_add(1, std::memory_order_release);
-        }
-        int value;
-        int dequeued = 0;
-        int attempts = 0;
-        while (dequeued < ops_per_thread && attempts < ops_per_thread * 2) {
-          if (queue.dequeue(value)) {
-            benchmark::DoNotOptimize(value);
-            dequeued++;
-          }
-          attempts++;
-        }
-      });
+      threads.emplace_back(
+          [&queue, t, ops_per_thread, &ready_flag, &num_threads]() {
+            while (ready_flag.load(std::memory_order_acquire) < num_threads) {
+              ready_flag.fetch_add(1, std::memory_order_release);
+            }
+            int value;
+            int dequeued = 0;
+            int attempts = 0;
+            while (dequeued < ops_per_thread && attempts < ops_per_thread * 2) {
+              if (queue.dequeue(value)) {
+                benchmark::DoNotOptimize(value);
+                dequeued++;
+              }
+              attempts++;
+            }
+          });
     }
 
-    for (auto& thread : threads) {
+    for (auto &thread : threads) {
       thread.join();
     }
     threads.clear();
@@ -255,7 +259,7 @@ static void BM_MixedProducerConsumer(benchmark::State& state) {
   state.SetItemsProcessed(state.iterations() * num_producers * ops_per_thread);
 }
 
-static void BM_LFQueue_Enqueue(benchmark::State& state) {
+static void BM_LFQueue_Enqueue(benchmark::State &state) {
   lf_lab::LFQueue<int> queue;
   for (auto _ : state) {
     for (int i = 0; i < 10000; ++i) {
@@ -266,7 +270,7 @@ static void BM_LFQueue_Enqueue(benchmark::State& state) {
   state.SetItemsProcessed(state.iterations() * 10000);
 }
 
-static void BM_UnsafeQueue_Enqueue(benchmark::State& state) {
+static void BM_UnsafeQueue_Enqueue(benchmark::State &state) {
   basic_lab::UnsafeQueue<int> queue;
   for (auto _ : state) {
     for (int i = 0; i < 10000; ++i) {
@@ -277,7 +281,7 @@ static void BM_UnsafeQueue_Enqueue(benchmark::State& state) {
   state.SetItemsProcessed(state.iterations() * 10000);
 }
 
-static void BM_LFQueue_Dequeue(benchmark::State& state) {
+static void BM_LFQueue_Dequeue(benchmark::State &state) {
   lf_lab::LFQueue<int> queue;
   for (auto _ : state) {
     state.PauseTiming();
@@ -294,7 +298,7 @@ static void BM_LFQueue_Dequeue(benchmark::State& state) {
   state.SetItemsProcessed(state.iterations() * 10000);
 }
 
-static void BM_UnsafeQueue_Dequeue(benchmark::State& state) {
+static void BM_UnsafeQueue_Dequeue(benchmark::State &state) {
   basic_lab::UnsafeQueue<int> queue;
   for (auto _ : state) {
     state.PauseTiming();
@@ -311,7 +315,7 @@ static void BM_UnsafeQueue_Dequeue(benchmark::State& state) {
   state.SetItemsProcessed(state.iterations() * 10000);
 }
 
-static void BM_SmallDataThroughput(benchmark::State& state) {
+static void BM_SmallDataThroughput(benchmark::State &state) {
   lf_lab::LFQueue<int> queue;
   for (auto _ : state) {
     for (int i = 0; i < 10000; ++i) {
@@ -325,7 +329,7 @@ static void BM_SmallDataThroughput(benchmark::State& state) {
   state.SetItemsProcessed(state.iterations() * 20000);
 }
 
-static void BM_LargeDataThroughput(benchmark::State& state) {
+static void BM_LargeDataThroughput(benchmark::State &state) {
   lf_lab::LFQueue<std::vector<int>> queue;
   const int vector_size = 1000;
   for (auto _ : state) {
@@ -344,17 +348,32 @@ BENCHMARK(BM_SingleThreadEnqueue)->MinTime(10);
 BENCHMARK(BM_SingleThreadDequeue)->MinTime(10);
 BENCHMARK(BM_SingleThreadMixed)->MinTime(10);
 
-BENCHMARK(BM_ConcurrentEnqueue)->Threads(2)->Threads(4)->Threads(8)
-                                 ->Threads(16)->Threads(32)->Threads(64)
-                                 ->MinTime(10);
+BENCHMARK(BM_ConcurrentEnqueue)
+    ->Threads(2)
+    ->Threads(4)
+    ->Threads(8)
+    ->Threads(16)
+    ->Threads(32)
+    ->Threads(64)
+    ->MinTime(10);
 
-BENCHMARK(BM_ConcurrentDequeue)->Threads(2)->Threads(4)->Threads(8)
-                                 ->Threads(16)->Threads(32)->Threads(64)
-                                 ->MinTime(10);
+BENCHMARK(BM_ConcurrentDequeue)
+    ->Threads(2)
+    ->Threads(4)
+    ->Threads(8)
+    ->Threads(16)
+    ->Threads(32)
+    ->Threads(64)
+    ->MinTime(10);
 
-BENCHMARK(BM_MixedProducerConsumer)->Threads(2)->Threads(4)->Threads(8)
-                                   ->Threads(16)->Threads(32)->Threads(64)
-                                   ->MinTime(10);
+BENCHMARK(BM_MixedProducerConsumer)
+    ->Threads(2)
+    ->Threads(4)
+    ->Threads(8)
+    ->Threads(16)
+    ->Threads(32)
+    ->Threads(64)
+    ->MinTime(10);
 
 BENCHMARK(BM_LFQueue_Enqueue)->MinTime(10);
 BENCHMARK(BM_UnsafeQueue_Enqueue)->MinTime(10);

@@ -1,12 +1,13 @@
 #include "lf_queue.hpp"
 
-#include <gtest/gtest.h>
 #include <atomic>
+#include <gtest/gtest.h>
+#include <set>
 #include <thread>
 #include <vector>
-#include <set>
 
-void run_concurrent_enqueue_test(int num_threads, int elements_per_thread, const std::string& test_name) {
+void run_concurrent_enqueue_test(int num_threads, int elements_per_thread,
+                                 const std::string &test_name) {
   lf_lab::LFQueue<int> queue;
   std::atomic<int> total_enqueued(0);
 
@@ -20,7 +21,7 @@ void run_concurrent_enqueue_test(int num_threads, int elements_per_thread, const
     });
   }
 
-  for (auto& t : threads) {
+  for (auto &t : threads) {
     t.join();
   }
 
@@ -39,12 +40,14 @@ void run_concurrent_enqueue_test(int num_threads, int elements_per_thread, const
   EXPECT_EQ(received_values.size(), static_cast<size_t>(expected_count));
 
   for (int i = 0; i < expected_count; ++i) {
-    EXPECT_TRUE(received_values.find(i) != received_values.end()) 
+    EXPECT_TRUE(received_values.find(i) != received_values.end())
         << "Value " << i << " not found in queue for " << test_name;
   }
 }
 
-void run_concurrent_unique_elements_test(int num_threads, int elements_per_thread, const std::string& test_name) {
+void run_concurrent_unique_elements_test(int num_threads,
+                                         int elements_per_thread,
+                                         const std::string &test_name) {
   lf_lab::LFQueue<std::pair<int, int>> queue;
   std::atomic<int> total_enqueued(0);
 
@@ -58,7 +61,7 @@ void run_concurrent_unique_elements_test(int num_threads, int elements_per_threa
     });
   }
 
-  for (auto& t : threads) {
+  for (auto &t : threads) {
     t.join();
   }
 
@@ -79,12 +82,15 @@ void run_concurrent_unique_elements_test(int num_threads, int elements_per_threa
   for (int i = 0; i < num_threads; ++i) {
     for (int j = 0; j < elements_per_thread; ++j) {
       EXPECT_TRUE(received_values.find({i, j}) != received_values.end())
-          << "Value {" << i << ", " << j << "} not found in queue for " << test_name;
+          << "Value {" << i << ", " << j << "} not found in queue for "
+          << test_name;
     }
   }
 }
 
-void run_concurrent_data_integrity_test(int num_threads, int elements_per_thread, const std::string& test_name) {
+void run_concurrent_data_integrity_test(int num_threads,
+                                        int elements_per_thread,
+                                        const std::string &test_name) {
   lf_lab::LFQueue<std::pair<int, double>> queue;
   std::atomic<int> total_enqueued(0);
 
@@ -100,7 +106,7 @@ void run_concurrent_data_integrity_test(int num_threads, int elements_per_thread
     });
   }
 
-  for (auto& t : threads) {
+  for (auto &t : threads) {
     t.join();
   }
 
@@ -114,7 +120,8 @@ void run_concurrent_data_integrity_test(int num_threads, int elements_per_thread
     int expected_value = value.first;
     double expected_double = expected_value * 1.5;
     EXPECT_EQ(value.second, expected_double)
-        << "Double value corrupted for " << expected_value << " in " << test_name;
+        << "Double value corrupted for " << expected_value << " in "
+        << test_name;
     found[expected_value] = true;
     dequeued_count++;
   }
@@ -125,7 +132,8 @@ void run_concurrent_data_integrity_test(int num_threads, int elements_per_thread
   }
 }
 
-void run_concurrent_burst_test(int num_threads, int burst_size, int num_bursts, const std::string& test_name) {
+void run_concurrent_burst_test(int num_threads, int burst_size, int num_bursts,
+                               const std::string &test_name) {
   lf_lab::LFQueue<int> queue;
   std::atomic<int> total_enqueued(0);
 
@@ -134,7 +142,8 @@ void run_concurrent_burst_test(int num_threads, int burst_size, int num_bursts, 
     threads.emplace_back([&, thread_id = i]() {
       for (int burst = 0; burst < num_bursts; ++burst) {
         for (int j = 0; j < burst_size; ++j) {
-          queue.enqueue(thread_id * num_bursts * burst_size + burst * burst_size + j);
+          queue.enqueue(thread_id * num_bursts * burst_size +
+                        burst * burst_size + j);
           total_enqueued.fetch_add(1, std::memory_order_relaxed);
         }
         std::this_thread::yield();
@@ -142,7 +151,7 @@ void run_concurrent_burst_test(int num_threads, int burst_size, int num_bursts, 
     });
   }
 
-  for (auto& t : threads) {
+  for (auto &t : threads) {
     t.join();
   }
 
@@ -161,7 +170,7 @@ void run_concurrent_burst_test(int num_threads, int burst_size, int num_bursts, 
   EXPECT_EQ(received_values.size(), static_cast<size_t>(expected_count));
 
   for (int i = 0; i < expected_count; ++i) {
-    EXPECT_TRUE(received_values.find(i) != received_values.end()) 
+    EXPECT_TRUE(received_values.find(i) != received_values.end())
         << "Value " << i << " not found in queue for " << test_name;
   }
 }

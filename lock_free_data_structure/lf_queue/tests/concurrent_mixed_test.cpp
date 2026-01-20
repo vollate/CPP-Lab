@@ -1,14 +1,15 @@
 #include "lf_queue.hpp"
 
-#include <gtest/gtest.h>
 #include <atomic>
-#include <thread>
-#include <vector>
-#include <unordered_set>
 #include <condition_variable>
+#include <gtest/gtest.h>
 #include <mutex>
+#include <thread>
+#include <unordered_set>
+#include <vector>
 
-void run_producer_consumer_test(int num_threads, int ops_per_thread, const std::string& test_name) {
+void run_producer_consumer_test(int num_threads, int ops_per_thread,
+                                const std::string &test_name) {
   lf_lab::LFQueue<int> queue;
   std::atomic<int> produced_count(0);
   std::atomic<int> consumed_count(0);
@@ -16,7 +17,8 @@ void run_producer_consumer_test(int num_threads, int ops_per_thread, const std::
   std::mutex consumed_mutex;
 
   int num_producers = num_threads / 2;
-  if (num_producers == 0) num_producers = 1;
+  if (num_producers == 0)
+    num_producers = 1;
   int num_consumers = num_threads - num_producers;
 
   std::vector<std::thread> threads;
@@ -35,13 +37,15 @@ void run_producer_consumer_test(int num_threads, int ops_per_thread, const std::
     threads.emplace_back([&]() {
       int value;
       int attempts = 0;
-      while (consumed_count.load(std::memory_order_relaxed) < (num_producers * ops_per_thread) && 
+      while (consumed_count.load(std::memory_order_relaxed) <
+                 (num_producers * ops_per_thread) &&
              attempts < ops_per_thread * 2) {
         if (queue.dequeue(value)) {
           std::lock_guard<std::mutex> lock(consumed_mutex);
           auto [it, success] = consumed_values.insert(value);
           if (!success) {
-            ADD_FAILURE() << "Duplicate value " << value << " found in " << test_name;
+            ADD_FAILURE() << "Duplicate value " << value << " found in "
+                          << test_name;
           }
           consumed_count.fetch_add(1, std::memory_order_relaxed);
         }
@@ -50,7 +54,7 @@ void run_producer_consumer_test(int num_threads, int ops_per_thread, const std::
     });
   }
 
-  for (auto& t : threads) {
+  for (auto &t : threads) {
     t.join();
   }
 
@@ -60,12 +64,13 @@ void run_producer_consumer_test(int num_threads, int ops_per_thread, const std::
   EXPECT_EQ(consumed_values.size(), static_cast<size_t>(expected_produced));
 
   for (int i = 0; i < expected_produced; ++i) {
-    EXPECT_TRUE(consumed_values.find(i) != consumed_values.end()) 
+    EXPECT_TRUE(consumed_values.find(i) != consumed_values.end())
         << "Value " << i << " not found in " << test_name;
   }
 }
 
-void run_high_contention_test(int num_threads, int ops_per_thread, const std::string& test_name) {
+void run_high_contention_test(int num_threads, int ops_per_thread,
+                              const std::string &test_name) {
   lf_lab::LFQueue<int> queue;
   std::atomic<int> enqueue_count(0);
   std::atomic<int> dequeue_count(0);
@@ -91,7 +96,7 @@ void run_high_contention_test(int num_threads, int ops_per_thread, const std::st
     });
   }
 
-  for (auto& t : threads) {
+  for (auto &t : threads) {
     t.join();
   }
 
@@ -112,12 +117,13 @@ void run_high_contention_test(int num_threads, int ops_per_thread, const std::st
   EXPECT_EQ(received_values.size(), static_cast<size_t>(expected_total));
 
   for (int i = 0; i < expected_total; ++i) {
-    EXPECT_TRUE(received_values.find(i) != received_values.end()) 
+    EXPECT_TRUE(received_values.find(i) != received_values.end())
         << "Value " << i << " not found in " << test_name;
   }
 }
 
-void run_alternating_test(int num_threads, int cycles, const std::string& test_name) {
+void run_alternating_test(int num_threads, int cycles,
+                          const std::string &test_name) {
   lf_lab::LFQueue<int> queue;
   std::atomic<int> produced_count(0);
   std::atomic<int> consumed_count(0);
@@ -137,7 +143,7 @@ void run_alternating_test(int num_threads, int cycles, const std::string& test_n
   }
 
   for (int cycle = 0; cycle < cycles; ++cycle) {
-    for (auto& t : threads) {
+    for (auto &t : threads) {
       t.join();
     }
     threads.clear();
@@ -154,7 +160,7 @@ void run_alternating_test(int num_threads, int cycles, const std::string& test_n
     }
   }
 
-  for (auto& t : threads) {
+  for (auto &t : threads) {
     t.join();
   }
 
@@ -164,12 +170,14 @@ void run_alternating_test(int num_threads, int cycles, const std::string& test_n
   EXPECT_EQ(received_values.size(), static_cast<size_t>(expected_total));
 
   for (int i = 0; i < expected_total; ++i) {
-    EXPECT_TRUE(received_values.find(i) != received_values.end()) 
+    EXPECT_TRUE(received_values.find(i) != received_values.end())
         << "Value " << i << " not found in " << test_name;
   }
 }
 
-void run_burst_producer_consumer_test(int num_threads, int burst_size, int num_bursts, const std::string& test_name) {
+void run_burst_producer_consumer_test(int num_threads, int burst_size,
+                                      int num_bursts,
+                                      const std::string &test_name) {
   lf_lab::LFQueue<int> queue;
   std::atomic<int> produced_count(0);
   std::atomic<int> consumed_count(0);
@@ -177,7 +185,8 @@ void run_burst_producer_consumer_test(int num_threads, int burst_size, int num_b
   std::mutex mtx;
 
   int num_producers = num_threads / 2;
-  if (num_producers == 0) num_producers = 1;
+  if (num_producers == 0)
+    num_producers = 1;
   int num_consumers = num_threads - num_producers;
 
   std::vector<std::thread> threads;
@@ -186,7 +195,8 @@ void run_burst_producer_consumer_test(int num_threads, int burst_size, int num_b
     threads.emplace_back([&, producer_id = i]() {
       for (int burst = 0; burst < num_bursts; ++burst) {
         for (int j = 0; j < burst_size; ++j) {
-          int value = producer_id * num_bursts * burst_size + burst * burst_size + j;
+          int value =
+              producer_id * num_bursts * burst_size + burst * burst_size + j;
           queue.enqueue(value);
           produced_count.fetch_add(1, std::memory_order_relaxed);
         }
@@ -200,7 +210,7 @@ void run_burst_producer_consumer_test(int num_threads, int burst_size, int num_b
       int value;
       int attempts = 0;
       int expected_total = num_producers * burst_size * num_bursts;
-      while (consumed_count.load(std::memory_order_relaxed) < expected_total && 
+      while (consumed_count.load(std::memory_order_relaxed) < expected_total &&
              attempts < expected_total * 2) {
         if (queue.dequeue(value)) {
           std::lock_guard<std::mutex> lock(mtx);
@@ -212,7 +222,7 @@ void run_burst_producer_consumer_test(int num_threads, int burst_size, int num_b
     });
   }
 
-  for (auto& t : threads) {
+  for (auto &t : threads) {
     t.join();
   }
 
@@ -222,12 +232,13 @@ void run_burst_producer_consumer_test(int num_threads, int burst_size, int num_b
   EXPECT_EQ(received_values.size(), static_cast<size_t>(expected_total));
 
   for (int i = 0; i < expected_total; ++i) {
-    EXPECT_TRUE(received_values.find(i) != received_values.end()) 
+    EXPECT_TRUE(received_values.find(i) != received_values.end())
         << "Value " << i << " not found in " << test_name;
   }
 }
 
-void run_rapid_empty_transition_test(int num_threads, int iterations, const std::string& test_name) {
+void run_rapid_empty_transition_test(int num_threads, int iterations,
+                                     const std::string &test_name) {
   lf_lab::LFQueue<int> queue;
   std::atomic<int> produced_count(0);
   std::atomic<int> consumed_count(0);
@@ -252,7 +263,7 @@ void run_rapid_empty_transition_test(int num_threads, int iterations, const std:
     });
   }
 
-  for (auto& t : threads) {
+  for (auto &t : threads) {
     t.join();
   }
 
@@ -273,7 +284,7 @@ void run_rapid_empty_transition_test(int num_threads, int iterations, const std:
   EXPECT_EQ(received_values.size(), static_cast<size_t>(expected_total));
 
   for (int i = 0; i < expected_total; ++i) {
-    EXPECT_TRUE(received_values.find(i) != received_values.end()) 
+    EXPECT_TRUE(received_values.find(i) != received_values.end())
         << "Value " << i << " not found in " << test_name;
   }
 }
@@ -351,27 +362,33 @@ TEST(Mixed, Alternating_64Threads) {
 }
 
 TEST(Mixed, BurstProducerConsumer_2Threads) {
-  run_burst_producer_consumer_test(2, 100, 100, "BurstProducerConsumer_2Threads");
+  run_burst_producer_consumer_test(2, 100, 100,
+                                   "BurstProducerConsumer_2Threads");
 }
 
 TEST(Mixed, BurstProducerConsumer_4Threads) {
-  run_burst_producer_consumer_test(4, 100, 100, "BurstProducerConsumer_4Threads");
+  run_burst_producer_consumer_test(4, 100, 100,
+                                   "BurstProducerConsumer_4Threads");
 }
 
 TEST(Mixed, BurstProducerConsumer_8Threads) {
-  run_burst_producer_consumer_test(8, 100, 100, "BurstProducerConsumer_8Threads");
+  run_burst_producer_consumer_test(8, 100, 100,
+                                   "BurstProducerConsumer_8Threads");
 }
 
 TEST(Mixed, BurstProducerConsumer_16Threads) {
-  run_burst_producer_consumer_test(16, 100, 100, "BurstProducerConsumer_16Threads");
+  run_burst_producer_consumer_test(16, 100, 100,
+                                   "BurstProducerConsumer_16Threads");
 }
 
 TEST(Mixed, BurstProducerConsumer_32Threads) {
-  run_burst_producer_consumer_test(32, 100, 100, "BurstProducerConsumer_32Threads");
+  run_burst_producer_consumer_test(32, 100, 100,
+                                   "BurstProducerConsumer_32Threads");
 }
 
 TEST(Mixed, BurstProducerConsumer_64Threads) {
-  run_burst_producer_consumer_test(64, 100, 100, "BurstProducerConsumer_64Threads");
+  run_burst_producer_consumer_test(64, 100, 100,
+                                   "BurstProducerConsumer_64Threads");
 }
 
 TEST(Mixed, RapidEmptyTransition_2Threads) {

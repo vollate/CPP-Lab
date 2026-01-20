@@ -1,8 +1,8 @@
 #include "lf_queue.hpp"
 
 #include <gtest/gtest.h>
-#include <vector>
 #include <memory>
+#include <vector>
 
 TEST(TypeTests, IntType) {
   lf_lab::LFQueue<int> queue;
@@ -121,9 +121,9 @@ struct TestStruct {
   double b;
   std::string c;
 
-  TestStruct(int a, double b, const std::string& c) : a(a), b(b), c(c) {}
+  TestStruct(int a, double b, const std::string &c) : a(a), b(b), c(c) {}
 
-  bool operator==(const TestStruct& other) const {
+  bool operator==(const TestStruct &other) const {
     return a == other.a && b == other.b && c == other.c;
   }
 };
@@ -150,12 +150,12 @@ class MoveOnlyType {
 public:
   MoveOnlyType() : value_(0) {}
   explicit MoveOnlyType(int value) : value_(value) {}
-  MoveOnlyType(const MoveOnlyType&) = delete;
-  MoveOnlyType& operator=(const MoveOnlyType&) = delete;
-  MoveOnlyType(MoveOnlyType&& other) noexcept : value_(other.value_) {
+  MoveOnlyType(const MoveOnlyType &) = delete;
+  MoveOnlyType &operator=(const MoveOnlyType &) = delete;
+  MoveOnlyType(MoveOnlyType &&other) noexcept : value_(other.value_) {
     other.value_ = 0;
   }
-  MoveOnlyType& operator=(MoveOnlyType&& other) noexcept {
+  MoveOnlyType &operator=(MoveOnlyType &&other) noexcept {
     if (this != &other) {
       value_ = other.value_;
       other.value_ = 0;

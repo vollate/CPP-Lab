@@ -1,7 +1,7 @@
 #include "lf_queue.hpp"
 
-#include <gtest/gtest.h>
 #include <atomic>
+#include <gtest/gtest.h>
 #include <thread>
 #include <vector>
 
@@ -59,12 +59,10 @@ TEST(MemoryTests, NodeAllocationTracking) {
     explicit TrackedInt(int value) : value_(value) {
       alloc_count.fetch_add(1, std::memory_order_relaxed);
     }
-    TrackedInt(const TrackedInt& other) : value_(other.value_) {
+    TrackedInt(const TrackedInt &other) : value_(other.value_) {
       alloc_count.fetch_add(1, std::memory_order_relaxed);
     }
-    ~TrackedInt() {
-      dealloc_count.fetch_add(1, std::memory_order_relaxed);
-    }
+    ~TrackedInt() { dealloc_count.fetch_add(1, std::memory_order_relaxed); }
   };
 
   alloc_count.store(0, std::memory_order_relaxed);
@@ -90,7 +88,8 @@ TEST(MemoryTests, NodeAllocationTracking) {
   int final_deallocs = dealloc_count.load(std::memory_order_relaxed);
 
   EXPECT_EQ(final_allocs, final_deallocs)
-      << "Memory leak detected: " << (final_allocs - final_deallocs) << " objects not freed";
+      << "Memory leak detected: " << (final_allocs - final_deallocs)
+      << " objects not freed";
 }
 
 TEST(MemoryTests, ConcurrentMemoryAllocation) {
@@ -106,12 +105,10 @@ TEST(MemoryTests, ConcurrentMemoryAllocation) {
     explicit TrackedInt(int value) : value_(value) {
       alloc_count.fetch_add(1, std::memory_order_relaxed);
     }
-    TrackedInt(const TrackedInt& other) : value_(other.value_) {
+    TrackedInt(const TrackedInt &other) : value_(other.value_) {
       alloc_count.fetch_add(1, std::memory_order_relaxed);
     }
-    ~TrackedInt() {
-      dealloc_count.fetch_add(1, std::memory_order_relaxed);
-    }
+    ~TrackedInt() { dealloc_count.fetch_add(1, std::memory_order_relaxed); }
   };
 
   alloc_count.store(0, std::memory_order_relaxed);
@@ -131,7 +128,7 @@ TEST(MemoryTests, ConcurrentMemoryAllocation) {
     });
   }
 
-  for (auto& t : threads) {
+  for (auto &t : threads) {
     t.join();
   }
   threads.clear();
@@ -145,7 +142,7 @@ TEST(MemoryTests, ConcurrentMemoryAllocation) {
     });
   }
 
-  for (auto& t : threads) {
+  for (auto &t : threads) {
     t.join();
   }
 
@@ -155,7 +152,8 @@ TEST(MemoryTests, ConcurrentMemoryAllocation) {
   int final_deallocs = dealloc_count.load(std::memory_order_relaxed);
 
   EXPECT_EQ(final_allocs, final_deallocs)
-      << "Memory leak detected in concurrent test: " << (final_allocs - final_deallocs) << " objects not freed";
+      << "Memory leak detected in concurrent test: "
+      << (final_allocs - final_deallocs) << " objects not freed";
 }
 
 TEST(MemoryTests, MemoryOrdering) {
@@ -168,13 +166,13 @@ TEST(MemoryTests, MemoryOrdering) {
   for (int i = 0; i < num_threads; ++i) {
     threads.emplace_back([&queue, i, ops_per_thread]() {
       for (int j = 0; j < ops_per_thread; ++j) {
-        std::atomic<int> value(i * ops_per_thread + j);
+        std::atomic_int value(i * ops_per_thread + j);
         queue.enqueue(std::move(value));
       }
     });
   }
 
-  for (auto& t : threads) {
+  for (auto &t : threads) {
     t.join();
   }
   threads.clear();
@@ -187,10 +185,12 @@ TEST(MemoryTests, MemoryOrdering) {
     }
   }
 
-  EXPECT_EQ(received_values.size(), static_cast<size_t>(num_threads * ops_per_thread));
+  EXPECT_EQ(received_values.size(),
+            static_cast<size_t>(num_threads * ops_per_thread));
 
   std::set<int> unique_values(received_values.begin(), received_values.end());
-  EXPECT_EQ(unique_values.size(), static_cast<size_t>(num_threads * ops_per_thread));
+  EXPECT_EQ(unique_values.size(),
+            static_cast<size_t>(num_threads * ops_per_thread));
 
   for (int i = 0; i < num_threads * ops_per_thread; ++i) {
     EXPECT_TRUE(unique_values.find(i) != unique_values.end())
