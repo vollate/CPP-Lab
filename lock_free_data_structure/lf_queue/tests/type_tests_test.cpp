@@ -12,15 +12,18 @@ TEST(TypeTests, IntType) {
   queue.enqueue(0);
   queue.enqueue(999999);
 
-  int result;
-  ASSERT_TRUE(queue.dequeue(result));
-  EXPECT_EQ(result, 42);
-  ASSERT_TRUE(queue.dequeue(result));
-  EXPECT_EQ(result, -123);
-  ASSERT_TRUE(queue.dequeue(result));
-  EXPECT_EQ(result, 0);
-  ASSERT_TRUE(queue.dequeue(result));
-  EXPECT_EQ(result, 999999);
+  auto result = queue.dequeue();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(**result, 42);
+  result = queue.dequeue();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(**result, -123);
+  result = queue.dequeue();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(**result, 0);
+  result = queue.dequeue();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(**result, 999999);
 
   EXPECT_TRUE(queue.empty());
 }
@@ -33,15 +36,18 @@ TEST(TypeTests, DoubleType) {
   queue.enqueue(1.61803);
   queue.enqueue(0.0);
 
-  double result;
-  ASSERT_TRUE(queue.dequeue(result));
-  EXPECT_DOUBLE_EQ(result, 3.14159);
-  ASSERT_TRUE(queue.dequeue(result));
-  EXPECT_DOUBLE_EQ(result, -2.71828);
-  ASSERT_TRUE(queue.dequeue(result));
-  EXPECT_DOUBLE_EQ(result, 1.61803);
-  ASSERT_TRUE(queue.dequeue(result));
-  EXPECT_DOUBLE_EQ(result, 0.0);
+  auto result = queue.dequeue();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_DOUBLE_EQ(**result, 3.14159);
+  result = queue.dequeue();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_DOUBLE_EQ(**result, -2.71828);
+  result = queue.dequeue();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_DOUBLE_EQ(**result, 1.61803);
+  result = queue.dequeue();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_DOUBLE_EQ(**result, 0.0);
 
   EXPECT_TRUE(queue.empty());
 }
@@ -59,15 +65,18 @@ TEST(TypeTests, StringType) {
   queue.enqueue(str3);
   queue.enqueue(str4);
 
-  std::string result;
-  ASSERT_TRUE(queue.dequeue(result));
-  EXPECT_EQ(result, "Hello");
-  ASSERT_TRUE(queue.dequeue(result));
-  EXPECT_EQ(result, "World");
-  ASSERT_TRUE(queue.dequeue(result));
-  EXPECT_EQ(result, "Test");
-  ASSERT_TRUE(queue.dequeue(result));
-  EXPECT_EQ(result, "String");
+  auto result = queue.dequeue();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(**result, "Hello");
+  result = queue.dequeue();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(**result, "World");
+  result = queue.dequeue();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(**result, "Test");
+  result = queue.dequeue();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(**result, "String");
 
   EXPECT_TRUE(queue.empty());
 }
@@ -85,15 +94,18 @@ TEST(TypeTests, VectorType) {
   queue.enqueue(v3);
   queue.enqueue(v4);
 
-  std::vector<int> result;
-  ASSERT_TRUE(queue.dequeue(result));
-  EXPECT_EQ(result, std::vector<int>({1, 2, 3}));
-  ASSERT_TRUE(queue.dequeue(result));
-  EXPECT_EQ(result, std::vector<int>({4, 5, 6, 7}));
-  ASSERT_TRUE(queue.dequeue(result));
-  EXPECT_EQ(result, std::vector<int>({8, 9}));
-  ASSERT_TRUE(queue.dequeue(result));
-  EXPECT_TRUE(result.empty());
+  auto result = queue.dequeue();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(**result, std::vector<int>({1, 2, 3}));
+  result = queue.dequeue();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(**result, std::vector<int>({4, 5, 6, 7}));
+  result = queue.dequeue();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(**result, std::vector<int>({8, 9}));
+  result = queue.dequeue();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_TRUE((*result)->empty());
 
   EXPECT_TRUE(queue.empty());
 }
@@ -105,13 +117,15 @@ TEST(TypeTests, UniquePtr) {
   queue.enqueue(std::make_unique<int>(123));
   queue.enqueue(std::make_unique<int>(456));
 
-  std::unique_ptr<int> result;
-  ASSERT_TRUE(queue.dequeue(result));
-  EXPECT_EQ(*result, 42);
-  ASSERT_TRUE(queue.dequeue(result));
-  EXPECT_EQ(*result, 123);
-  ASSERT_TRUE(queue.dequeue(result));
-  EXPECT_EQ(*result, 456);
+  auto result = queue.dequeue();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(***result, 42);
+  result = queue.dequeue();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(***result, 123);
+  result = queue.dequeue();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(***result, 456);
 
   EXPECT_TRUE(queue.empty());
 }
@@ -135,13 +149,15 @@ TEST(TypeTests, CustomStruct) {
   queue.enqueue(TestStruct(2, 2.5, "two"));
   queue.enqueue(TestStruct(3, 3.5, "three"));
 
-  TestStruct result(0, 0.0, "");
-  ASSERT_TRUE(queue.dequeue(result));
-  EXPECT_EQ(result, TestStruct(1, 1.5, "one"));
-  ASSERT_TRUE(queue.dequeue(result));
-  EXPECT_EQ(result, TestStruct(2, 2.5, "two"));
-  ASSERT_TRUE(queue.dequeue(result));
-  EXPECT_EQ(result, TestStruct(3, 3.5, "three"));
+  auto result = queue.dequeue();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(**result, TestStruct(1, 1.5, "one"));
+  result = queue.dequeue();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(**result, TestStruct(2, 2.5, "two"));
+  result = queue.dequeue();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(**result, TestStruct(3, 3.5, "three"));
 
   EXPECT_TRUE(queue.empty());
 }
@@ -175,13 +191,15 @@ TEST(TypeTests, MoveOnlyType) {
   queue.enqueue(MoveOnlyType(123));
   queue.enqueue(MoveOnlyType(456));
 
-  MoveOnlyType result;
-  ASSERT_TRUE(queue.dequeue(result));
-  EXPECT_EQ(result.value(), 42);
-  ASSERT_TRUE(queue.dequeue(result));
-  EXPECT_EQ(result.value(), 123);
-  ASSERT_TRUE(queue.dequeue(result));
-  EXPECT_EQ(result.value(), 456);
+  auto result = queue.dequeue();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ((*result)->value(), 42);
+  result = queue.dequeue();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ((*result)->value(), 123);
+  result = queue.dequeue();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ((*result)->value(), 456);
 
   EXPECT_TRUE(queue.empty());
 }

@@ -18,8 +18,8 @@ TEST(MemoryTests, LeakAfterClear) {
 
   EXPECT_TRUE(queue.empty());
 
-  int value;
-  EXPECT_FALSE(queue.dequeue(value));
+  auto value = queue.dequeue();
+  EXPECT_FALSE(value.has_value());
 }
 
 TEST(MemoryTests, LeakAfterDestructor) {
@@ -37,10 +37,10 @@ TEST(MemoryTests, LeakAfterDestructor) {
     new_queue.enqueue(i);
   }
 
-  int value;
   for (int i = 0; i < 10000; ++i) {
-    ASSERT_TRUE(new_queue.dequeue(value));
-    EXPECT_EQ(value, i);
+    auto value = new_queue.dequeue();
+    ASSERT_TRUE(value.has_value());
+    EXPECT_EQ(**value, i);
   }
 
   EXPECT_TRUE(new_queue.empty());
@@ -62,6 +62,17 @@ TEST(MemoryTests, NodeAllocationTracking) {
     TrackedInt(const TrackedInt &other) : value_(other.value_) {
       alloc_count.fetch_add(1, std::memory_order_relaxed);
     }
+    TrackedInt &operator=(const TrackedInt &other) {
+      value_ = other.value_;
+      return *this;
+    }
+    TrackedInt(TrackedInt &&other) noexcept : value_(other.value_) {
+      alloc_count.fetch_add(1, std::memory_order_relaxed);
+    }
+    TrackedInt &operator=(TrackedInt &&other) noexcept {
+      value_ = other.value_;
+      return *this;
+    }
     ~TrackedInt() { dealloc_count.fetch_add(1, std::memory_order_relaxed); }
   };
 
@@ -75,9 +86,8 @@ TEST(MemoryTests, NodeAllocationTracking) {
       queue.enqueue(TrackedInt(i));
     }
 
-    TrackedInt value;
     for (int i = 0; i < 1000; ++i) {
-      queue.dequeue(value);
+      queue.dequeue();
     }
 
     int initial_allocs = alloc_count.load(std::memory_order_relaxed);
@@ -135,9 +145,8 @@ TEST(MemoryTests, ConcurrentMemoryAllocation) {
 
   for (int i = 0; i < num_threads; ++i) {
     threads.emplace_back([&queue, ops_per_thread]() {
-      TrackedInt value;
       for (int j = 0; j < ops_per_thread; ++j) {
-        queue.dequeue(value);
+        queue.dequeue();
       }
     });
   }
@@ -179,9 +188,9 @@ TEST(MemoryTests, MemoryOrdering) {
 
   std::vector<int> received_values;
   for (int i = 0; i < num_threads * ops_per_thread; ++i) {
-    std::atomic<int> value;
-    if (queue.dequeue(value)) {
-      received_values.push_back(value.load(std::memory_order_acquire));
+    auto value = queue.dequeue();
+    if (value) {
+      received_values.push_back((*value)->load(std::memory_order_acquire));
     }
   }
 

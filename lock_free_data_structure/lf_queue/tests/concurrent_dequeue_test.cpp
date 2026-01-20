@@ -21,12 +21,12 @@ void run_concurrent_dequeue_no_duplicates_test(int num_threads, int queue_size,
 
   for (int i = 0; i < num_threads; ++i) {
     threads.emplace_back([&]() {
-      int value;
       while (true) {
-        if (queue.dequeue(value)) {
-          auto [it, success] = received_values.insert(value);
+        auto value = queue.dequeue();
+        if (value) {
+          auto [it, success] = received_values.insert(**value);
           if (!success) {
-            ADD_FAILURE() << "Duplicate value " << value << " found in "
+            ADD_FAILURE() << "Duplicate value " << **value << " found in "
                           << test_name;
           }
           dequeued_count.fetch_add(1, std::memory_order_relaxed);
@@ -66,10 +66,10 @@ void run_concurrent_dequeue_correct_order_test(int num_threads, int queue_size,
   for (int i = 0; i < num_threads; ++i) {
     threads.emplace_back([&]() {
       std::vector<int> local_values;
-      int value;
       while (true) {
-        if (queue.dequeue(value)) {
-          local_values.push_back(value);
+        auto value = queue.dequeue();
+        if (value) {
+          local_values.push_back(**value);
           dequeued_count.fetch_add(1, std::memory_order_relaxed);
         } else {
           break;
@@ -77,7 +77,7 @@ void run_concurrent_dequeue_correct_order_test(int num_threads, int queue_size,
       }
       std::lock_guard<std::mutex> lock(mtx);
       received_values.insert(received_values.end(), local_values.begin(),
-                             local_values.end());
+                              local_values.end());
     });
   }
 
@@ -111,9 +111,9 @@ void run_concurrent_dequeue_with_empty_test(int num_threads, int queue_size,
 
   for (int i = 0; i < num_threads; ++i) {
     threads.emplace_back([&]() {
-      int value;
       for (int j = 0; j < queue_size + 100; ++j) {
-        if (queue.dequeue(value)) {
+        auto value = queue.dequeue();
+        if (value) {
           successful_dequeue_count.fetch_add(1, std::memory_order_relaxed);
         } else {
           empty_dequeue_count.fetch_add(1, std::memory_order_relaxed);
@@ -145,12 +145,12 @@ void run_concurrent_dequeue_race_conditions_test(int num_threads,
 
   for (int i = 0; i < num_threads; ++i) {
     threads.emplace_back([&]() {
-      int value;
       int attempt = 0;
       while (dequeued_count.load(std::memory_order_relaxed) < queue_size &&
-             attempt < queue_size * 2) {
-        if (queue.dequeue(value)) {
-          received_values.insert(value);
+              attempt < queue_size * 2) {
+        auto value = queue.dequeue();
+        if (value) {
+          received_values.insert(**value);
           dequeued_count.fetch_add(1, std::memory_order_relaxed);
         }
         ++attempt;

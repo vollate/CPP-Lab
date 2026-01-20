@@ -29,10 +29,10 @@ TEST(EdgeCases, StressTest1MillionOps) {
           queue.enqueue(thread_id * 1000000 + j);
           enqueue_count.fetch_add(1, std::memory_order_relaxed);
         } else {
-          int value;
-          if (queue.dequeue(value)) {
+          auto value = queue.dequeue();
+          if (value) {
             std::lock_guard<std::mutex> lock(mtx);
-            dequeued_values.push_back(value);
+            dequeued_values.push_back(**value);
             dequeue_count.fetch_add(1, std::memory_order_relaxed);
           }
         }
@@ -44,10 +44,9 @@ TEST(EdgeCases, StressTest1MillionOps) {
     t.join();
   }
 
-  int value;
-  while (queue.dequeue(value)) {
+  while (auto value = queue.dequeue()) {
     std::lock_guard<std::mutex> lock(mtx);
-    dequeued_values.push_back(value);
+    dequeued_values.push_back(**value);
     dequeue_count.fetch_add(1, std::memory_order_relaxed);
   }
 
@@ -62,9 +61,9 @@ TEST(EdgeCases, RapidEmptyNonEmpty) {
     queue.enqueue(i);
     EXPECT_FALSE(queue.empty());
 
-    int value;
-    ASSERT_TRUE(queue.dequeue(value));
-    EXPECT_EQ(value, i);
+    auto value = queue.dequeue();
+    ASSERT_TRUE(value.has_value());
+    EXPECT_EQ(**value, i);
     EXPECT_TRUE(queue.empty());
   }
 
@@ -81,11 +80,12 @@ TEST(EdgeCases, AlternatingPattern) {
     queue.enqueue(i);
     queue.enqueue(i + 1);
 
-    int value1, value2;
-    ASSERT_TRUE(queue.dequeue(value1));
-    ASSERT_TRUE(queue.dequeue(value2));
-    dequeued_values.push_back(value1);
-    dequeued_values.push_back(value2);
+    auto value1 = queue.dequeue();
+    auto value2 = queue.dequeue();
+    ASSERT_TRUE(value1.has_value());
+    ASSERT_TRUE(value2.has_value());
+    dequeued_values.push_back(**value1);
+    dequeued_values.push_back(**value2);
   }
 
   EXPECT_EQ(dequeued_values.size(), static_cast<size_t>(iterations * 2));
@@ -103,9 +103,9 @@ TEST(EdgeCases, SingleElementRepeated) {
 
   for (int i = 0; i < 1000; ++i) {
     queue.enqueue(42);
-    int value;
-    ASSERT_TRUE(queue.dequeue(value));
-    EXPECT_EQ(value, 42);
+    auto value = queue.dequeue();
+    ASSERT_TRUE(value.has_value());
+    EXPECT_EQ(**value, 42);
   }
 
   EXPECT_TRUE(queue.empty());
@@ -131,8 +131,8 @@ TEST(EdgeCases, ClearWhileConcurrent) {
         queue.enqueue(thread_id * ops_per_thread + j);
         enqueue_count.fetch_add(1, std::memory_order_relaxed);
 
-        int value;
-        if (queue.dequeue(value)) {
+        auto value = queue.dequeue();
+        if (value) {
           dequeue_count.fetch_add(1, std::memory_order_relaxed);
         }
       }
@@ -153,8 +153,8 @@ TEST(EdgeCases, ClearWhileConcurrent) {
 
   EXPECT_TRUE(queue.empty());
 
-  int value;
-  EXPECT_FALSE(queue.dequeue(value));
+  auto value = queue.dequeue();
+  EXPECT_FALSE(value.has_value());
 }
 
 TEST(EdgeCases, MemoryPressure) {
@@ -178,8 +178,8 @@ TEST(EdgeCases, MemoryPressure) {
         queue.enqueue(std::move(new_vec));
         enqueue_count.fetch_add(1, std::memory_order_relaxed);
 
-        std::vector<int> value;
-        if (queue.dequeue(value)) {
+        auto value = queue.dequeue();
+        if (value) {
           dequeue_count.fetch_add(1, std::memory_order_relaxed);
         }
       }
@@ -191,8 +191,8 @@ TEST(EdgeCases, MemoryPressure) {
   }
 
   while (true) {
-    std::vector<int> value;
-    if (!queue.dequeue(value)) {
+    auto value = queue.dequeue();
+    if (!value) {
       break;
     }
     dequeue_count.fetch_add(1, std::memory_order_relaxed);

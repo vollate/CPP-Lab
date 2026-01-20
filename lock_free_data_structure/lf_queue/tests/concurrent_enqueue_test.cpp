@@ -29,10 +29,9 @@ void run_concurrent_enqueue_test(int num_threads, int elements_per_thread,
   EXPECT_EQ(total_enqueued.load(), expected_count);
 
   std::set<int> received_values;
-  int value;
   int dequeued_count = 0;
-  while (queue.dequeue(value)) {
-    received_values.insert(value);
+  while (auto value = queue.dequeue()) {
+    received_values.insert(**value);
     dequeued_count++;
   }
 
@@ -69,10 +68,9 @@ void run_concurrent_unique_elements_test(int num_threads,
   EXPECT_EQ(total_enqueued.load(), expected_count);
 
   std::set<std::pair<int, int>> received_values;
-  std::pair<int, int> value;
   int dequeued_count = 0;
-  while (queue.dequeue(value)) {
-    received_values.insert(value);
+  while (auto value = queue.dequeue()) {
+    received_values.insert(**value);
     dequeued_count++;
   }
 
@@ -114,12 +112,11 @@ void run_concurrent_data_integrity_test(int num_threads,
   EXPECT_EQ(total_enqueued.load(), expected_count);
 
   std::vector<bool> found(expected_count, false);
-  std::pair<int, double> value;
   int dequeued_count = 0;
-  while (queue.dequeue(value)) {
-    int expected_value = value.first;
+  while (auto value = queue.dequeue()) {
+    int expected_value = (*value)->first;
     double expected_double = expected_value * 1.5;
-    EXPECT_EQ(value.second, expected_double)
+    EXPECT_EQ((*value)->second, expected_double)
         << "Double value corrupted for " << expected_value << " in "
         << test_name;
     found[expected_value] = true;
@@ -159,10 +156,9 @@ void run_concurrent_burst_test(int num_threads, int burst_size, int num_bursts,
   EXPECT_EQ(total_enqueued.load(), expected_count);
 
   std::set<int> received_values;
-  int value;
   int dequeued_count = 0;
-  while (queue.dequeue(value)) {
-    received_values.insert(value);
+  while (auto value = queue.dequeue()) {
+    received_values.insert(**value);
     dequeued_count++;
   }
 

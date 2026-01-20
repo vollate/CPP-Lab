@@ -1,6 +1,8 @@
 #pragma once
 
 #include <atomic>
+#include <memory>
+#include <optional>
 #include <tuple>
 
 namespace lf_lab {
@@ -41,19 +43,20 @@ public:
     _enqueue_impl(new_tail);
   }
 
-  auto dequeue(DataType &result) -> bool {
+  auto dequeue() -> std::optional<std::unique_ptr<DataType>> {
     while (true) {
       Node *old_head = head_.load();
       Node *new_head = old_head->next_.load();
       if (new_head == nullptr) {
-        return false;
+        return std::nullopt;
       }
       if (!head_.compare_exchange_strong(old_head, new_head)) {
         continue;
       }
-      result = std::move(*new_head->data_);
-      delete new_head;
-      return true;
+      auto result = std::move(old_head->data_);
+      old_head->data_ = nullptr;
+      delete old_head;
+      return std::move(result);
     }
   }
 
@@ -77,16 +80,17 @@ public:
 
 private:
   struct Node {
-    DataType *data_ = nullptr;
+    std::unique_ptr<DataType> data_ = nullptr;
     std::atomic<Node *> next_ = nullptr;
 
     Node() = default;
 
-    Node(const DataType &data) : data_(new DataType(data)) {}
+    Node(const DataType &data) : data_(std::make_unique<DataType>(data)) {}
 
-    Node(DataType &&data) : data_(new DataType(std::move(data))) {}
+    Node(DataType &&data)
+        : data_(std::make_unique<DataType>(std::move(data))) {}
 
-    ~Node() { delete data_; }
+    ~Node() = default;
   };
 
   Node head_guard_;

@@ -35,16 +35,16 @@ void run_producer_consumer_test(int num_threads, int ops_per_thread,
 
   for (int i = 0; i < num_consumers; ++i) {
     threads.emplace_back([&]() {
-      int value;
       int attempts = 0;
       while (consumed_count.load(std::memory_order_relaxed) <
                  (num_producers * ops_per_thread) &&
-             attempts < ops_per_thread * 2) {
-        if (queue.dequeue(value)) {
+              attempts < ops_per_thread * 2) {
+        auto value = queue.dequeue();
+        if (value) {
           std::lock_guard<std::mutex> lock(consumed_mutex);
-          auto [it, success] = consumed_values.insert(value);
+          auto [it, success] = consumed_values.insert(**value);
           if (!success) {
-            ADD_FAILURE() << "Duplicate value " << value << " found in "
+            ADD_FAILURE() << "Duplicate value " << **value << " found in "
                           << test_name;
           }
           consumed_count.fetch_add(1, std::memory_order_relaxed);
@@ -86,10 +86,10 @@ void run_high_contention_test(int num_threads, int ops_per_thread,
         queue.enqueue(value);
         enqueue_count.fetch_add(1, std::memory_order_relaxed);
 
-        int dequeued;
-        if (queue.dequeue(dequeued)) {
+        auto dequeued = queue.dequeue();
+        if (dequeued) {
           std::lock_guard<std::mutex> lock(mtx);
-          received_values.insert(dequeued);
+          received_values.insert(**dequeued);
           dequeue_count.fetch_add(1, std::memory_order_relaxed);
         }
       }
@@ -104,12 +104,12 @@ void run_high_contention_test(int num_threads, int ops_per_thread,
   EXPECT_EQ(enqueue_count.load(), expected_total);
 
   while (true) {
-    int value;
-    if (!queue.dequeue(value)) {
+    auto value = queue.dequeue();
+    if (!value) {
       break;
     }
     std::lock_guard<std::mutex> lock(mtx);
-    received_values.insert(value);
+    received_values.insert(**value);
     dequeue_count.fetch_add(1, std::memory_order_relaxed);
   }
 
@@ -150,10 +150,9 @@ void run_alternating_test(int num_threads, int cycles,
 
     for (int i = 0; i < num_threads; ++i) {
       threads.emplace_back([&]() {
-        int value;
-        while (queue.dequeue(value)) {
+        while (auto value = queue.dequeue()) {
           std::lock_guard<std::mutex> lock(mtx);
-          received_values.insert(value);
+          received_values.insert(**value);
           consumed_count.fetch_add(1, std::memory_order_relaxed);
         }
       });
@@ -207,14 +206,14 @@ void run_burst_producer_consumer_test(int num_threads, int burst_size,
 
   for (int i = 0; i < num_consumers; ++i) {
     threads.emplace_back([&]() {
-      int value;
       int attempts = 0;
       int expected_total = num_producers * burst_size * num_bursts;
       while (consumed_count.load(std::memory_order_relaxed) < expected_total &&
-             attempts < expected_total * 2) {
-        if (queue.dequeue(value)) {
+              attempts < expected_total * 2) {
+        auto value = queue.dequeue();
+        if (value) {
           std::lock_guard<std::mutex> lock(mtx);
-          received_values.insert(value);
+          received_values.insert(**value);
           consumed_count.fetch_add(1, std::memory_order_relaxed);
         }
         ++attempts;
@@ -253,10 +252,10 @@ void run_rapid_empty_transition_test(int num_threads, int iterations,
         queue.enqueue(thread_id * iterations + iter);
         produced_count.fetch_add(1, std::memory_order_relaxed);
 
-        int value;
-        if (queue.dequeue(value)) {
+        auto value = queue.dequeue();
+        if (value) {
           std::lock_guard<std::mutex> lock(mtx);
-          received_values.insert(value);
+          received_values.insert(**value);
           consumed_count.fetch_add(1, std::memory_order_relaxed);
         }
       }
@@ -271,12 +270,12 @@ void run_rapid_empty_transition_test(int num_threads, int iterations,
   EXPECT_EQ(produced_count.load(), expected_total);
 
   while (true) {
-    int value;
-    if (!queue.dequeue(value)) {
+    auto value = queue.dequeue();
+    if (!value) {
       break;
     }
     std::lock_guard<std::mutex> lock(mtx);
-    received_values.insert(value);
+    received_values.insert(**value);
     consumed_count.fetch_add(1, std::memory_order_relaxed);
   }
 

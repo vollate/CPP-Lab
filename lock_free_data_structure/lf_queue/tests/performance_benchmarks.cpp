@@ -105,9 +105,8 @@ static void BM_SingleThreadDequeue(benchmark::State &state) {
     }
     state.ResumeTiming();
 
-    int value;
     for (int i = 0; i < 1000; ++i) {
-      benchmark::DoNotOptimize(queue.dequeue(value));
+      benchmark::DoNotOptimize(queue.dequeue());
     }
   }
   state.SetItemsProcessed(state.iterations() * 1000);
@@ -122,10 +121,9 @@ static void BM_SingleThreadMixed(benchmark::State &state) {
     }
     state.ResumeTiming();
 
-    int value;
     for (int i = 0; i < 500; ++i) {
       queue.enqueue(500 + i);
-      benchmark::DoNotOptimize(queue.dequeue(value));
+      benchmark::DoNotOptimize(queue.dequeue());
     }
     queue.clear();
   }
@@ -184,11 +182,9 @@ static void BM_ConcurrentDequeue(benchmark::State &state) {
             while (ready_flag.load(std::memory_order_acquire) < num_threads) {
               ready_flag.fetch_add(1, std::memory_order_release);
             }
-            int value;
             int dequeued = 0;
             while (dequeued < ops_per_thread) {
-              if (queue.dequeue(value)) {
-                benchmark::DoNotOptimize(value);
+              if (queue.dequeue()) {
                 dequeued++;
               }
             }
@@ -235,12 +231,10 @@ static void BM_MixedProducerConsumer(benchmark::State &state) {
             while (ready_flag.load(std::memory_order_acquire) < num_threads) {
               ready_flag.fetch_add(1, std::memory_order_release);
             }
-            int value;
             int dequeued = 0;
             int attempts = 0;
             while (dequeued < ops_per_thread && attempts < ops_per_thread * 2) {
-              if (queue.dequeue(value)) {
-                benchmark::DoNotOptimize(value);
+              if (queue.dequeue()) {
                 dequeued++;
               }
               attempts++;
@@ -290,9 +284,8 @@ static void BM_LFQueue_Dequeue(benchmark::State &state) {
     }
     state.ResumeTiming();
 
-    int value;
     for (int i = 0; i < 10000; ++i) {
-      benchmark::DoNotOptimize(queue.dequeue(value));
+      benchmark::DoNotOptimize(queue.dequeue());
     }
   }
   state.SetItemsProcessed(state.iterations() * 10000);
@@ -321,9 +314,8 @@ static void BM_SmallDataThroughput(benchmark::State &state) {
     for (int i = 0; i < 10000; ++i) {
       queue.enqueue(i);
     }
-    int value;
     for (int i = 0; i < 10000; ++i) {
-      benchmark::DoNotOptimize(queue.dequeue(value));
+      benchmark::DoNotOptimize(queue.dequeue());
     }
   }
   state.SetItemsProcessed(state.iterations() * 20000);
@@ -336,9 +328,8 @@ static void BM_LargeDataThroughput(benchmark::State &state) {
     for (int i = 0; i < 1000; ++i) {
       queue.enqueue(std::vector<int>(vector_size, i));
     }
-    std::vector<int> value;
     for (int i = 0; i < 1000; ++i) {
-      benchmark::DoNotOptimize(queue.dequeue(value));
+      benchmark::DoNotOptimize(queue.dequeue());
     }
   }
   state.SetItemsProcessed(state.iterations() * 2000);

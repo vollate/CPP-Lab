@@ -7,9 +7,9 @@ TEST(BasicOperations, SingleEnqueueDequeue) {
 
   queue.enqueue(42);
 
-  int result;
-  ASSERT_TRUE(queue.dequeue(result));
-  EXPECT_EQ(result, 42);
+  auto result = queue.dequeue();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(**result, 42);
   EXPECT_TRUE(queue.empty());
 }
 
@@ -23,10 +23,10 @@ TEST(BasicOperations, MultipleEnqueueDequeueSequential) {
 
   EXPECT_FALSE(queue.empty());
 
-  int result;
   for (int i = 0; i < num_elements; ++i) {
-    ASSERT_TRUE(queue.dequeue(result));
-    EXPECT_EQ(result, i);
+    auto result = queue.dequeue();
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(**result, i);
   }
 
   EXPECT_TRUE(queue.empty());
@@ -35,8 +35,8 @@ TEST(BasicOperations, MultipleEnqueueDequeueSequential) {
 TEST(BasicOperations, EmptyQueueDequeue) {
   lf_lab::LFQueue<int> queue;
 
-  int result;
-  ASSERT_FALSE(queue.dequeue(result));
+  auto result = queue.dequeue();
+  ASSERT_FALSE(result.has_value());
   EXPECT_TRUE(queue.empty());
 }
 
@@ -52,9 +52,9 @@ TEST(BasicOperations, EnqueueAfterClear) {
 
   queue.enqueue(42);
 
-  int result;
-  ASSERT_TRUE(queue.dequeue(result));
-  EXPECT_EQ(result, 42);
+  auto result = queue.dequeue();
+  ASSERT_TRUE(result.has_value());
+  EXPECT_EQ(**result, 42);
   EXPECT_TRUE(queue.empty());
 }
 
@@ -69,11 +69,10 @@ TEST(BasicOperations, EmptyStateCheck) {
   queue.enqueue(2);
   EXPECT_FALSE(queue.empty());
 
-  int result;
-  queue.dequeue(result);
+  queue.dequeue();
   EXPECT_FALSE(queue.empty());
 
-  queue.dequeue(result);
+  queue.dequeue();
   EXPECT_TRUE(queue.empty());
 }
 
@@ -89,11 +88,12 @@ TEST(BasicOperations, MoveSemanticsBasic) {
   EXPECT_TRUE(str1.empty());
   EXPECT_TRUE(str2.empty());
 
-  std::string result1, result2;
-  ASSERT_TRUE(queue.dequeue(result1));
-  ASSERT_TRUE(queue.dequeue(result2));
+  auto result1 = queue.dequeue();
+  auto result2 = queue.dequeue();
+  ASSERT_TRUE(result1.has_value());
+  ASSERT_TRUE(result2.has_value());
 
-  EXPECT_EQ(result1, "hello");
-  EXPECT_EQ(result2, "world");
+  EXPECT_EQ(**result1, "hello");
+  EXPECT_EQ(**result2, "world");
   EXPECT_TRUE(queue.empty());
 }
