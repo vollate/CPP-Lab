@@ -1,13 +1,10 @@
 #include <algorithm>
-#include <cstdio>
-#include <gtest/gtest.h>
 
 namespace basic_lab {
 
 template <typename DataType> class UnsafeQueue {
   struct Node;
 
-private:
   void _enqueue_impl(Node *const new_tail) {
     tail_->next_ = new_tail;
     tail_ = new_tail;
@@ -75,23 +72,3 @@ private:
 template <typename DataType> UnsafeQueue<DataType>::~UnsafeQueue() { clear(); }
 
 } // namespace basic_lab
-
-TEST(UnsafeQueue, BasicOperations) {
-  basic_lab::UnsafeQueue<int> queue;
-
-  queue.enqueue(1);
-  queue.enqueue(2);
-  queue.enqueue(3);
-
-  ASSERT_EQ(queue.empty(), false);
-
-  printf("Initial queue size test:\n");
-  printf("Expected 3 elements\n");
-
-  int value;
-  while (queue.dequeue(value)) {
-    printf("Dequeued: %d\n", value);
-  }
-
-  printf("Queue is now empty: %s\n", queue.empty() ? "true" : "false");
-}

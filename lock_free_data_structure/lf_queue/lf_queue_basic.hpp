@@ -1,7 +1,6 @@
 #pragma once
 
 #include <atomic>
-#include <cstdlib>
 #include <memory>
 #include <optional>
 #include <tuple>
