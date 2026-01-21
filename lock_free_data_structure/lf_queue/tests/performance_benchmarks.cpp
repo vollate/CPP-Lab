@@ -133,7 +133,7 @@ static void BM_SingleThreadMixed(benchmark::State &state) {
 static void BM_ConcurrentEnqueue(benchmark::State &state) {
   const int num_threads = state.threads();
   const int ops_per_thread = 10000;
-  std::atomic<int> ready_flag(0);
+  std::atomic_int ready_flag(0);
   std::vector<std::thread> threads;
 
   for (auto _ : state) {
@@ -166,7 +166,7 @@ static void BM_ConcurrentDequeue(benchmark::State &state) {
   const int num_threads = state.threads();
   const int ops_per_thread = 10000;
   const int total_elements = num_threads * ops_per_thread;
-  std::atomic<int> ready_flag(0);
+  std::atomic_int ready_flag(0);
   std::vector<std::thread> threads;
 
   for (auto _ : state) {
@@ -207,7 +207,7 @@ static void BM_MixedProducerConsumer(benchmark::State &state) {
   const int ops_per_thread = 5000;
   const int num_producers = num_threads / 2;
   const int num_consumers = num_threads - num_producers;
-  std::atomic<int> ready_flag(0);
+  std::atomic_int ready_flag(0);
   std::vector<std::thread> threads;
 
   for (auto _ : state) {

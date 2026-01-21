@@ -11,8 +11,8 @@
 void run_producer_consumer_test(int num_threads, int ops_per_thread,
                                 const std::string &test_name) {
   lf_lab::LFQueue<int> queue;
-  std::atomic<int> produced_count(0);
-  std::atomic<int> consumed_count(0);
+  std::atomic_int produced_count(0);
+  std::atomic_int consumed_count(0);
   std::unordered_set<int> consumed_values;
   std::mutex consumed_mutex;
 
@@ -38,7 +38,7 @@ void run_producer_consumer_test(int num_threads, int ops_per_thread,
       int attempts = 0;
       while (consumed_count.load(std::memory_order_relaxed) <
                  (num_producers * ops_per_thread) &&
-              attempts < ops_per_thread * 2) {
+             attempts < ops_per_thread * 2) {
         auto value = queue.dequeue();
         if (value) {
           std::lock_guard<std::mutex> lock(consumed_mutex);
@@ -72,8 +72,8 @@ void run_producer_consumer_test(int num_threads, int ops_per_thread,
 void run_high_contention_test(int num_threads, int ops_per_thread,
                               const std::string &test_name) {
   lf_lab::LFQueue<int> queue;
-  std::atomic<int> enqueue_count(0);
-  std::atomic<int> dequeue_count(0);
+  std::atomic_int enqueue_count(0);
+  std::atomic_int dequeue_count(0);
   std::unordered_set<int> received_values;
   std::mutex mtx;
 
@@ -125,8 +125,8 @@ void run_high_contention_test(int num_threads, int ops_per_thread,
 void run_alternating_test(int num_threads, int cycles,
                           const std::string &test_name) {
   lf_lab::LFQueue<int> queue;
-  std::atomic<int> produced_count(0);
-  std::atomic<int> consumed_count(0);
+  std::atomic_int produced_count(0);
+  std::atomic_int consumed_count(0);
   std::unordered_set<int> received_values;
   std::mutex mtx;
 
@@ -178,8 +178,8 @@ void run_burst_producer_consumer_test(int num_threads, int burst_size,
                                       int num_bursts,
                                       const std::string &test_name) {
   lf_lab::LFQueue<int> queue;
-  std::atomic<int> produced_count(0);
-  std::atomic<int> consumed_count(0);
+  std::atomic_int produced_count(0);
+  std::atomic_int consumed_count(0);
   std::unordered_set<int> received_values;
   std::mutex mtx;
 
@@ -209,7 +209,7 @@ void run_burst_producer_consumer_test(int num_threads, int burst_size,
       int attempts = 0;
       int expected_total = num_producers * burst_size * num_bursts;
       while (consumed_count.load(std::memory_order_relaxed) < expected_total &&
-              attempts < expected_total * 2) {
+             attempts < expected_total * 2) {
         auto value = queue.dequeue();
         if (value) {
           std::lock_guard<std::mutex> lock(mtx);
@@ -239,8 +239,8 @@ void run_burst_producer_consumer_test(int num_threads, int burst_size,
 void run_rapid_empty_transition_test(int num_threads, int iterations,
                                      const std::string &test_name) {
   lf_lab::LFQueue<int> queue;
-  std::atomic<int> produced_count(0);
-  std::atomic<int> consumed_count(0);
+  std::atomic_int produced_count(0);
+  std::atomic_int consumed_count(0);
   std::unordered_set<int> received_values;
   std::mutex mtx;
 

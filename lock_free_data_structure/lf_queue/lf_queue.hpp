@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <cstdlib>
 #include <memory>
 #include <optional>
 #include <tuple>
@@ -10,22 +11,22 @@ template <typename DataType> class LFQueue {
   struct Node;
 
   void _enqueue_impl(Node *const new_tail) {
-    while (true) {
+    while (new_tail) {
       Node *old_tail = tail_.load();
       Node *expected = nullptr;
       if (old_tail->next_.compare_exchange_strong(expected, new_tail)) {
-        Node *cur_tail = tail_.load();
-        std::ignore = tail_.compare_exchange_strong(cur_tail, new_tail);
+        tail_.compare_exchange_strong(old_tail, new_tail);
         return;
       }
-      Node *cur_tail = tail_.load();
-      Node *next_tail = cur_tail->next_.load();
-      std::ignore = tail_.compare_exchange_strong(cur_tail, next_tail);
+      Node *next_tail = old_tail->next_.load();
+      tail_.compare_exchange_strong(old_tail, next_tail);
     }
   }
 
 public:
-  LFQueue() : head_(&head_guard_), tail_(&head_guard_) {}
+  LFQueue() : hidden_head_(new Node), head_(new Node), tail_(head_.load()) {
+    hidden_head_->next_.store(head_.load());
+  }
 
   LFQueue(const LFQueue &) = delete;
 
@@ -53,23 +54,15 @@ public:
       if (!head_.compare_exchange_strong(old_head, new_head)) {
         continue;
       }
-      auto result = std::move(old_head->data_);
-      old_head->data_ = nullptr;
-      delete old_head;
+      auto result = std::move(new_head->data_);
+      new_head->data_ = nullptr;
+      // delete old_head;
       return std::move(result);
     }
   }
 
   void clear() {
-    while (true) {
-      Node *old_head = head_.load();
-      Node *new_head = old_head->next_.load();
-      if (new_head == nullptr) {
-        return;
-      }
-      if (head_.compare_exchange_strong(old_head, new_head)) {
-        delete old_head;
-      }
+    while (dequeue()) {
     }
   }
 
@@ -93,10 +86,20 @@ private:
     ~Node() = default;
   };
 
-  Node head_guard_;
+  Node *hidden_head_;
   std::atomic<Node *> head_;
   std::atomic<Node *> tail_;
 };
 
-template <typename DataType> LFQueue<DataType>::~LFQueue() { clear(); }
+template <typename DataType> LFQueue<DataType>::~LFQueue() {
+  // 析构时从 hidden_head_->next_ 开始（跳过 hidden_head 本身）
+  Node *current = hidden_head_->next_.load();
+  while (current != nullptr) {
+    Node *next = current->next_.load();
+    delete current;
+    current = next;
+  }
+  // 最后删除 hidden_head
+  delete hidden_head_;
+}
 } // namespace lf_lab

@@ -16,7 +16,7 @@ TEST(BasicOperations, SingleEnqueueDequeue) {
 TEST(BasicOperations, MultipleEnqueueDequeueSequential) {
   lf_lab::LFQueue<int> queue;
 
-  const int num_elements = 10;
+  constexpr int num_elements = 10;
   for (int i = 0; i < num_elements; ++i) {
     queue.enqueue(i);
   }
@@ -26,7 +26,7 @@ TEST(BasicOperations, MultipleEnqueueDequeueSequential) {
   for (int i = 0; i < num_elements; ++i) {
     auto result = queue.dequeue();
     ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(**result, i);
+    EXPECT_EQ(*result->get(), i);
   }
 
   EXPECT_TRUE(queue.empty());

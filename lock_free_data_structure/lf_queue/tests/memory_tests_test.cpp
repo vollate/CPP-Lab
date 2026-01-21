@@ -47,8 +47,8 @@ TEST(MemoryTests, LeakAfterDestructor) {
 }
 
 TEST(MemoryTests, NodeAllocationTracking) {
-  static std::atomic<int> alloc_count(0);
-  static std::atomic<int> dealloc_count(0);
+  static std::atomic_int alloc_count(0);
+  static std::atomic_int dealloc_count(0);
 
   struct TrackedInt {
     int value_;
@@ -56,23 +56,29 @@ TEST(MemoryTests, NodeAllocationTracking) {
     TrackedInt() : value_(0) {
       alloc_count.fetch_add(1, std::memory_order_relaxed);
     }
+
     explicit TrackedInt(int value) : value_(value) {
       alloc_count.fetch_add(1, std::memory_order_relaxed);
     }
+
     TrackedInt(const TrackedInt &other) : value_(other.value_) {
       alloc_count.fetch_add(1, std::memory_order_relaxed);
     }
+
     TrackedInt &operator=(const TrackedInt &other) {
       value_ = other.value_;
       return *this;
     }
+
     TrackedInt(TrackedInt &&other) noexcept : value_(other.value_) {
       alloc_count.fetch_add(1, std::memory_order_relaxed);
     }
+
     TrackedInt &operator=(TrackedInt &&other) noexcept {
       value_ = other.value_;
       return *this;
     }
+
     ~TrackedInt() { dealloc_count.fetch_add(1, std::memory_order_relaxed); }
   };
 
@@ -103,8 +109,8 @@ TEST(MemoryTests, NodeAllocationTracking) {
 }
 
 TEST(MemoryTests, ConcurrentMemoryAllocation) {
-  static std::atomic<int> alloc_count(0);
-  static std::atomic<int> dealloc_count(0);
+  static std::atomic_int alloc_count(0);
+  static std::atomic_int dealloc_count(0);
 
   struct TrackedInt {
     int value_;
@@ -112,12 +118,15 @@ TEST(MemoryTests, ConcurrentMemoryAllocation) {
     TrackedInt() : value_(0) {
       alloc_count.fetch_add(1, std::memory_order_relaxed);
     }
+
     explicit TrackedInt(int value) : value_(value) {
       alloc_count.fetch_add(1, std::memory_order_relaxed);
     }
+
     TrackedInt(const TrackedInt &other) : value_(other.value_) {
       alloc_count.fetch_add(1, std::memory_order_relaxed);
     }
+
     ~TrackedInt() { dealloc_count.fetch_add(1, std::memory_order_relaxed); }
   };
 
@@ -166,17 +175,18 @@ TEST(MemoryTests, ConcurrentMemoryAllocation) {
 }
 
 TEST(MemoryTests, MemoryOrdering) {
-  lf_lab::LFQueue<std::atomic<int>> queue;
+  lf_lab::LFQueue<int> queue;
   const int num_threads = 4;
   const int ops_per_thread = 1000;
 
   std::vector<std::thread> threads;
+  threads.reserve(num_threads);
 
   for (int i = 0; i < num_threads; ++i) {
-    threads.emplace_back([&queue, i, ops_per_thread]() {
+    threads.emplace_back([&queue, i, ops_per_thread] {
       for (int j = 0; j < ops_per_thread; ++j) {
-        std::atomic_int value(i * ops_per_thread + j);
-        queue.enqueue(std::move(value));
+        int value = i * ops_per_thread + j;
+        queue.enqueue(value);
       }
     });
   }
@@ -188,9 +198,9 @@ TEST(MemoryTests, MemoryOrdering) {
 
   std::vector<int> received_values;
   for (int i = 0; i < num_threads * ops_per_thread; ++i) {
-    auto value = queue.dequeue();
-    if (value) {
-      received_values.push_back((*value)->load(std::memory_order_acquire));
+    auto value_opt = queue.dequeue();
+    if (value_opt) {
+      received_values.push_back(*value_opt->get());
     }
   }
 

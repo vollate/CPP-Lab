@@ -9,9 +9,10 @@
 void run_concurrent_enqueue_test(int num_threads, int elements_per_thread,
                                  const std::string &test_name) {
   lf_lab::LFQueue<int> queue;
-  std::atomic<int> total_enqueued(0);
+  std::atomic_int total_enqueued(0);
 
   std::vector<std::thread> threads;
+  threads.reserve(num_threads);
   for (int i = 0; i < num_threads; ++i) {
     threads.emplace_back([&, thread_id = i]() {
       for (int j = 0; j < elements_per_thread; ++j) {
@@ -48,7 +49,7 @@ void run_concurrent_unique_elements_test(int num_threads,
                                          int elements_per_thread,
                                          const std::string &test_name) {
   lf_lab::LFQueue<std::pair<int, int>> queue;
-  std::atomic<int> total_enqueued(0);
+  std::atomic_int total_enqueued(0);
 
   std::vector<std::thread> threads;
   for (int i = 0; i < num_threads; ++i) {
@@ -90,7 +91,7 @@ void run_concurrent_data_integrity_test(int num_threads,
                                         int elements_per_thread,
                                         const std::string &test_name) {
   lf_lab::LFQueue<std::pair<int, double>> queue;
-  std::atomic<int> total_enqueued(0);
+  std::atomic_int total_enqueued(0);
 
   std::vector<std::thread> threads;
   for (int i = 0; i < num_threads; ++i) {
@@ -132,7 +133,7 @@ void run_concurrent_data_integrity_test(int num_threads,
 void run_concurrent_burst_test(int num_threads, int burst_size, int num_bursts,
                                const std::string &test_name) {
   lf_lab::LFQueue<int> queue;
-  std::atomic<int> total_enqueued(0);
+  std::atomic_int total_enqueued(0);
 
   std::vector<std::thread> threads;
   for (int i = 0; i < num_threads; ++i) {

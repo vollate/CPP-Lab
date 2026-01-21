@@ -8,8 +8,8 @@
 
 TEST(EdgeCases, StressTest1MillionOps) {
   lf_lab::LFQueue<int> queue;
-  std::atomic<int> enqueue_count(0);
-  std::atomic<int> dequeue_count(0);
+  std::atomic_int enqueue_count(0);
+  std::atomic_int dequeue_count(0);
   std::vector<int> dequeued_values;
   std::mutex mtx;
 
@@ -114,8 +114,8 @@ TEST(EdgeCases, SingleElementRepeated) {
 TEST(EdgeCases, ClearWhileConcurrent) {
   lf_lab::LFQueue<int> queue;
   std::atomic<bool> should_clear(false);
-  std::atomic<int> enqueue_count(0);
-  std::atomic<int> dequeue_count(0);
+  std::atomic_int enqueue_count(0);
+  std::atomic_int dequeue_count(0);
 
   const int num_threads = 4;
   const int ops_per_thread = 10000;
@@ -159,8 +159,8 @@ TEST(EdgeCases, ClearWhileConcurrent) {
 
 TEST(EdgeCases, MemoryPressure) {
   lf_lab::LFQueue<std::vector<int>> queue;
-  std::atomic<int> enqueue_count(0);
-  std::atomic<int> dequeue_count(0);
+  std::atomic_int enqueue_count(0);
+  std::atomic_int dequeue_count(0);
 
   const int num_threads = 4;
   const int ops_per_thread = 5000;

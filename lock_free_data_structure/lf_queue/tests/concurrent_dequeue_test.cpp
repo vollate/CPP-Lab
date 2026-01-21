@@ -16,15 +16,20 @@ void run_concurrent_dequeue_no_duplicates_test(int num_threads, int queue_size,
   }
 
   std::unordered_set<int> received_values;
+  std::mutex mtx;
   std::vector<std::thread> threads;
-  std::atomic<int> dequeued_count(0);
+  threads.reserve(num_threads);
+  std::atomic_int dequeued_count(0);
 
   for (int i = 0; i < num_threads; ++i) {
     threads.emplace_back([&]() {
       while (true) {
         auto value = queue.dequeue();
         if (value) {
-          auto [it, success] = received_values.insert(**value);
+          auto val = **value;
+          std::unique_lock lock(mtx);
+          auto [it, success] = received_values.insert(val);
+          lock.unlock();
           if (!success) {
             ADD_FAILURE() << "Duplicate value " << **value << " found in "
                           << test_name;
@@ -59,10 +64,11 @@ void run_concurrent_dequeue_correct_order_test(int num_threads, int queue_size,
   }
 
   std::vector<int> received_values;
-  std::atomic<int> dequeued_count(0);
+  std::atomic_int dequeued_count(0);
   std::mutex mtx;
 
   std::vector<std::thread> threads;
+  threads.reserve(num_threads);
   for (int i = 0; i < num_threads; ++i) {
     threads.emplace_back([&]() {
       std::vector<int> local_values;
@@ -75,9 +81,9 @@ void run_concurrent_dequeue_correct_order_test(int num_threads, int queue_size,
           break;
         }
       }
-      std::lock_guard<std::mutex> lock(mtx);
+      std::scoped_lock lock(mtx);
       received_values.insert(received_values.end(), local_values.begin(),
-                              local_values.end());
+                             local_values.end());
     });
   }
 
@@ -106,8 +112,9 @@ void run_concurrent_dequeue_with_empty_test(int num_threads, int queue_size,
   }
 
   std::vector<std::thread> threads;
-  std::atomic<int> empty_dequeue_count(0);
-  std::atomic<int> successful_dequeue_count(0);
+  threads.reserve(num_threads);
+  std::atomic_int empty_dequeue_count(0);
+  std::atomic_int successful_dequeue_count(0);
 
   for (int i = 0; i < num_threads; ++i) {
     threads.emplace_back([&]() {
@@ -141,16 +148,20 @@ void run_concurrent_dequeue_race_conditions_test(int num_threads,
 
   std::unordered_set<int> received_values;
   std::vector<std::thread> threads;
-  std::atomic<int> dequeued_count(0);
+  threads.reserve(num_threads);
+  std::atomic_int dequeued_count(0);
+  std::mutex mtx;
 
   for (int i = 0; i < num_threads; ++i) {
     threads.emplace_back([&]() {
       int attempt = 0;
       while (dequeued_count.load(std::memory_order_relaxed) < queue_size &&
-              attempt < queue_size * 2) {
+             attempt < queue_size * 2) {
         auto value = queue.dequeue();
         if (value) {
+          std::unique_lock lock(mtx);
           received_values.insert(**value);
+          lock.unlock();
           dequeued_count.fetch_add(1, std::memory_order_relaxed);
         }
         ++attempt;
