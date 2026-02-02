@@ -6,7 +6,7 @@
 #include <vector>
 
 TEST(MemoryTests, LeakAfterClear) {
-  lf_lab::LFQueue<int> queue;
+  lf_lab::BasicLFQueue<int> queue;
 
   for (int i = 0; i < 10000; ++i) {
     queue.enqueue(i);
@@ -24,14 +24,14 @@ TEST(MemoryTests, LeakAfterClear) {
 
 TEST(MemoryTests, LeakAfterDestructor) {
   {
-    lf_lab::LFQueue<int> queue;
+    lf_lab::BasicLFQueue<int> queue;
 
     for (int i = 0; i < 10000; ++i) {
       queue.enqueue(i);
     }
   }
 
-  lf_lab::LFQueue<int> new_queue;
+  lf_lab::BasicLFQueue<int> new_queue;
 
   for (int i = 0; i < 10000; ++i) {
     new_queue.enqueue(i);
@@ -86,7 +86,7 @@ TEST(MemoryTests, NodeAllocationTracking) {
   dealloc_count.store(0, std::memory_order_relaxed);
 
   {
-    lf_lab::LFQueue<TrackedInt> queue;
+    lf_lab::BasicLFQueue<TrackedInt> queue;
 
     for (int i = 0; i < 1000; ++i) {
       queue.enqueue(TrackedInt(i));
@@ -133,7 +133,7 @@ TEST(MemoryTests, ConcurrentMemoryAllocation) {
   alloc_count.store(0, std::memory_order_relaxed);
   dealloc_count.store(0, std::memory_order_relaxed);
 
-  lf_lab::LFQueue<TrackedInt> queue;
+  lf_lab::BasicLFQueue<TrackedInt> queue;
   const int num_threads = 8;
   const int ops_per_thread = 1000;
 
@@ -175,7 +175,7 @@ TEST(MemoryTests, ConcurrentMemoryAllocation) {
 }
 
 TEST(MemoryTests, MemoryOrdering) {
-  lf_lab::LFQueue<int> queue;
+  lf_lab::BasicLFQueue<int> queue;
   const int num_threads = 4;
   const int ops_per_thread = 1000;
 

@@ -9,7 +9,7 @@
 
 void run_concurrent_dequeue_no_duplicates_test(int num_threads, int queue_size,
                                                const std::string &test_name) {
-  lf_lab::LFQueue<int> queue;
+  lf_lab::BasicLFQueue<int> queue;
 
   for (int i = 0; i < queue_size; ++i) {
     queue.enqueue(i);
@@ -57,7 +57,7 @@ void run_concurrent_dequeue_no_duplicates_test(int num_threads, int queue_size,
 
 void run_concurrent_dequeue_correct_order_test(int num_threads, int queue_size,
                                                const std::string &test_name) {
-  lf_lab::LFQueue<int> queue;
+  lf_lab::BasicLFQueue<int> queue;
 
   for (int i = 0; i < queue_size; ++i) {
     queue.enqueue(i);
@@ -105,7 +105,7 @@ void run_concurrent_dequeue_correct_order_test(int num_threads, int queue_size,
 
 void run_concurrent_dequeue_with_empty_test(int num_threads, int queue_size,
                                             const std::string &test_name) {
-  lf_lab::LFQueue<int> queue;
+  lf_lab::BasicLFQueue<int> queue;
 
   for (int i = 0; i < queue_size; ++i) {
     queue.enqueue(i);
@@ -140,7 +140,7 @@ void run_concurrent_dequeue_with_empty_test(int num_threads, int queue_size,
 void run_concurrent_dequeue_race_conditions_test(int num_threads,
                                                  int queue_size,
                                                  const std::string &test_name) {
-  lf_lab::LFQueue<int> queue;
+  lf_lab::BasicLFQueue<int> queue;
 
   for (int i = 0; i < queue_size; ++i) {
     queue.enqueue(i);

@@ -8,7 +8,7 @@
 
 void run_concurrent_enqueue_test(int num_threads, int elements_per_thread,
                                  const std::string &test_name) {
-  lf_lab::LFQueue<int> queue;
+  lf_lab::BasicLFQueue<int> queue;
   std::atomic_int total_enqueued(0);
 
   std::vector<std::thread> threads;
@@ -48,7 +48,7 @@ void run_concurrent_enqueue_test(int num_threads, int elements_per_thread,
 void run_concurrent_unique_elements_test(int num_threads,
                                          int elements_per_thread,
                                          const std::string &test_name) {
-  lf_lab::LFQueue<std::pair<int, int>> queue;
+  lf_lab::BasicLFQueue<std::pair<int, int>> queue;
   std::atomic_int total_enqueued(0);
 
   std::vector<std::thread> threads;
@@ -90,7 +90,7 @@ void run_concurrent_unique_elements_test(int num_threads,
 void run_concurrent_data_integrity_test(int num_threads,
                                         int elements_per_thread,
                                         const std::string &test_name) {
-  lf_lab::LFQueue<std::pair<int, double>> queue;
+  lf_lab::BasicLFQueue<std::pair<int, double>> queue;
   std::atomic_int total_enqueued(0);
 
   std::vector<std::thread> threads;
@@ -132,7 +132,7 @@ void run_concurrent_data_integrity_test(int num_threads,
 
 void run_concurrent_burst_test(int num_threads, int burst_size, int num_bursts,
                                const std::string &test_name) {
-  lf_lab::LFQueue<int> queue;
+  lf_lab::BasicLFQueue<int> queue;
   std::atomic_int total_enqueued(0);
 
   std::vector<std::thread> threads;

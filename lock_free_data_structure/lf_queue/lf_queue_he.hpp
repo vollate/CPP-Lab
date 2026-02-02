@@ -3,10 +3,9 @@
 #include <atomic>
 #include <memory>
 #include <optional>
-#include <tuple>
 
 namespace lf_lab {
-template <typename DataType> class LFQueue {
+template <typename DataType> class LFQueueBasic {
   struct Node;
 
   void _enqueue_impl(Node *const new_tail) {
@@ -23,15 +22,16 @@ template <typename DataType> class LFQueue {
   }
 
 public:
-  LFQueue() : hidden_head_(new Node), head_(new Node), tail_(head_.load()) {
+  LFQueueBasic()
+      : hidden_head_(new Node), head_(new Node), tail_(head_.load()) {
     hidden_head_->next_.store(head_.load());
   }
 
-  LFQueue(const LFQueue &) = delete;
+  LFQueueBasic(const LFQueueBasic &) = delete;
 
-  LFQueue &operator=(const LFQueue &) = delete;
+  LFQueueBasic &operator=(const LFQueueBasic &) = delete;
 
-  ~LFQueue();
+  ~LFQueueBasic();
 
   void enqueue(const DataType &data) {
     Node *new_tail = new Node(data);
@@ -90,7 +90,7 @@ private:
   std::atomic<Node *> tail_;
 };
 
-template <typename DataType> LFQueue<DataType>::~LFQueue() {
+template <typename DataType> LFQueueBasic<DataType>::~LFQueueBasic() {
   // 析构时从 hidden_head_->next_ 开始（跳过 hidden_head 本身）
   Node *current = hidden_head_->next_.load();
   while (current != nullptr) {

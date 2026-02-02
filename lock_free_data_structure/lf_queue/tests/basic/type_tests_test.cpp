@@ -5,7 +5,7 @@
 #include <vector>
 
 TEST(TypeTests, IntType) {
-  lf_lab::LFQueue<int> queue;
+  lf_lab::BasicLFQueue<int> queue;
 
   queue.enqueue(42);
   queue.enqueue(-123);
@@ -29,7 +29,7 @@ TEST(TypeTests, IntType) {
 }
 
 TEST(TypeTests, DoubleType) {
-  lf_lab::LFQueue<double> queue;
+  lf_lab::BasicLFQueue<double> queue;
 
   queue.enqueue(3.14159);
   queue.enqueue(-2.71828);
@@ -53,7 +53,7 @@ TEST(TypeTests, DoubleType) {
 }
 
 TEST(TypeTests, StringType) {
-  lf_lab::LFQueue<std::string> queue;
+  lf_lab::BasicLFQueue<std::string> queue;
 
   std::string str1 = "Hello";
   std::string str2 = "World";
@@ -82,7 +82,7 @@ TEST(TypeTests, StringType) {
 }
 
 TEST(TypeTests, VectorType) {
-  lf_lab::LFQueue<std::vector<int>> queue;
+  lf_lab::BasicLFQueue<std::vector<int>> queue;
 
   std::vector<int> v1 = {1, 2, 3};
   std::vector<int> v2 = {4, 5, 6, 7};
@@ -111,7 +111,7 @@ TEST(TypeTests, VectorType) {
 }
 
 TEST(TypeTests, UniquePtr) {
-  lf_lab::LFQueue<std::unique_ptr<int>> queue;
+  lf_lab::BasicLFQueue<std::unique_ptr<int>> queue;
 
   queue.enqueue(std::make_unique<int>(42));
   queue.enqueue(std::make_unique<int>(123));
@@ -143,7 +143,7 @@ struct TestStruct {
 };
 
 TEST(TypeTests, CustomStruct) {
-  lf_lab::LFQueue<TestStruct> queue;
+  lf_lab::BasicLFQueue<TestStruct> queue;
 
   queue.enqueue(TestStruct(1, 1.5, "one"));
   queue.enqueue(TestStruct(2, 2.5, "two"));
@@ -185,7 +185,7 @@ private:
 };
 
 TEST(TypeTests, MoveOnlyType) {
-  lf_lab::LFQueue<MoveOnlyType> queue;
+  lf_lab::BasicLFQueue<MoveOnlyType> queue;
 
   queue.enqueue(MoveOnlyType(42));
   queue.enqueue(MoveOnlyType(123));

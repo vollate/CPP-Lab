@@ -7,7 +7,7 @@
 #include <vector>
 
 TEST(EdgeCases, StressTest1MillionOps) {
-  lf_lab::LFQueue<int> queue;
+  lf_lab::BasicLFQueue<int> queue;
   std::atomic_int enqueue_count(0);
   std::atomic_int dequeue_count(0);
   std::vector<int> dequeued_values;
@@ -55,7 +55,7 @@ TEST(EdgeCases, StressTest1MillionOps) {
 }
 
 TEST(EdgeCases, RapidEmptyNonEmpty) {
-  lf_lab::LFQueue<int> queue;
+  lf_lab::BasicLFQueue<int> queue;
 
   for (int i = 0; i < 10000; ++i) {
     queue.enqueue(i);
@@ -71,7 +71,7 @@ TEST(EdgeCases, RapidEmptyNonEmpty) {
 }
 
 TEST(EdgeCases, AlternatingPattern) {
-  lf_lab::LFQueue<int> queue;
+  lf_lab::BasicLFQueue<int> queue;
   std::vector<int> dequeued_values;
 
   const int iterations = 10000;
@@ -99,7 +99,7 @@ TEST(EdgeCases, AlternatingPattern) {
 }
 
 TEST(EdgeCases, SingleElementRepeated) {
-  lf_lab::LFQueue<int> queue;
+  lf_lab::BasicLFQueue<int> queue;
 
   for (int i = 0; i < 1000; ++i) {
     queue.enqueue(42);
@@ -112,7 +112,7 @@ TEST(EdgeCases, SingleElementRepeated) {
 }
 
 TEST(EdgeCases, ClearWhileConcurrent) {
-  lf_lab::LFQueue<int> queue;
+  lf_lab::BasicLFQueue<int> queue;
   std::atomic<bool> should_clear(false);
   std::atomic_int enqueue_count(0);
   std::atomic_int dequeue_count(0);
@@ -158,7 +158,7 @@ TEST(EdgeCases, ClearWhileConcurrent) {
 }
 
 TEST(EdgeCases, MemoryPressure) {
-  lf_lab::LFQueue<std::vector<int>> queue;
+  lf_lab::BasicLFQueue<std::vector<int>> queue;
   std::atomic_int enqueue_count(0);
   std::atomic_int dequeue_count(0);
 

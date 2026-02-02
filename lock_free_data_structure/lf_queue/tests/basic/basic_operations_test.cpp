@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 TEST(BasicOperations, SingleEnqueueDequeue) {
-  lf_lab::LFQueue<int> queue;
+  lf_lab::BasicLFQueue<int> queue;
 
   queue.enqueue(42);
 
@@ -14,7 +14,7 @@ TEST(BasicOperations, SingleEnqueueDequeue) {
 }
 
 TEST(BasicOperations, MultipleEnqueueDequeueSequential) {
-  lf_lab::LFQueue<int> queue;
+  lf_lab::BasicLFQueue<int> queue;
 
   constexpr int num_elements = 10;
   for (int i = 0; i < num_elements; ++i) {
@@ -33,7 +33,7 @@ TEST(BasicOperations, MultipleEnqueueDequeueSequential) {
 }
 
 TEST(BasicOperations, EmptyQueueDequeue) {
-  lf_lab::LFQueue<int> queue;
+  lf_lab::BasicLFQueue<int> queue;
 
   auto result = queue.dequeue();
   ASSERT_FALSE(result.has_value());
@@ -41,7 +41,7 @@ TEST(BasicOperations, EmptyQueueDequeue) {
 }
 
 TEST(BasicOperations, EnqueueAfterClear) {
-  lf_lab::LFQueue<int> queue;
+  lf_lab::BasicLFQueue<int> queue;
 
   queue.enqueue(1);
   queue.enqueue(2);
@@ -59,7 +59,7 @@ TEST(BasicOperations, EnqueueAfterClear) {
 }
 
 TEST(BasicOperations, EmptyStateCheck) {
-  lf_lab::LFQueue<int> queue;
+  lf_lab::BasicLFQueue<int> queue;
 
   EXPECT_TRUE(queue.empty());
 
@@ -77,7 +77,7 @@ TEST(BasicOperations, EmptyStateCheck) {
 }
 
 TEST(BasicOperations, MoveSemanticsBasic) {
-  lf_lab::LFQueue<std::string> queue;
+  lf_lab::BasicLFQueue<std::string> queue;
 
   std::string str1 = "hello";
   std::string str2 = "world";

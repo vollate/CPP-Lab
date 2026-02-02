@@ -3,10 +3,9 @@
 #include <atomic>
 #include <memory>
 #include <optional>
-#include <tuple>
 
 namespace lf_lab {
-template <typename DataType> class LFQueue {
+template <typename DataType> class BasicLFQueue {
   struct Node;
 
   void _enqueue_impl(Node *const new_tail) {
@@ -17,21 +16,23 @@ template <typename DataType> class LFQueue {
         tail_.compare_exchange_strong(old_tail, new_tail);
         return;
       }
-      Node *next_tail = old_tail->next_.load();
+      Node *next_tail = expected;
       tail_.compare_exchange_strong(old_tail, next_tail);
     }
   }
 
 public:
-  LFQueue() : hidden_head_(new Node), head_(new Node), tail_(head_.load()) {
+  BasicLFQueue()
+      : hidden_head_(new Node), head_(new Node), tail_(head_.load()) {
     hidden_head_->next_.store(head_.load());
   }
 
-  LFQueue(const LFQueue &) = delete;
+  BasicLFQueue(const BasicLFQueue &) = delete;
+  BasicLFQueue(BasicLFQueue &&) = delete;
+  auto operator=(const BasicLFQueue &) -> BasicLFQueue & = delete;
+  auto operator=(BasicLFQueue &&) -> BasicLFQueue & = delete;
 
-  LFQueue &operator=(const LFQueue &) = delete;
-
-  ~LFQueue();
+  ~BasicLFQueue();
 
   void enqueue(const DataType &data) {
     Node *new_tail = new Node(data);
@@ -46,16 +47,21 @@ public:
   auto dequeue() -> std::optional<std::unique_ptr<DataType>> {
     while (true) {
       Node *old_head = head_.load();
+      Node *old_tail = tail_.load();
       Node *new_head = old_head->next_.load();
-      if (new_head == nullptr) {
-        return std::nullopt;
+      if (old_head == old_tail) {
+        if (new_head == nullptr) {
+          return std::nullopt;
+        }
+        tail_.compare_exchange_strong(old_tail, new_head);
+        continue;
       }
+
       if (!head_.compare_exchange_strong(old_head, new_head)) {
         continue;
       }
       auto result = std::move(new_head->data_);
       new_head->data_ = nullptr;
-      // delete old_head;
       return std::move(result);
     }
   }
@@ -90,15 +96,13 @@ private:
   std::atomic<Node *> tail_;
 };
 
-template <typename DataType> LFQueue<DataType>::~LFQueue() {
-  // 析构时从 hidden_head_->next_ 开始（跳过 hidden_head 本身）
+template <typename DataType> BasicLFQueue<DataType>::~BasicLFQueue() {
   Node *current = hidden_head_->next_.load();
   while (current != nullptr) {
     Node *next = current->next_.load();
     delete current;
     current = next;
   }
-  // 最后删除 hidden_head
   delete hidden_head_;
 }
 } // namespace lf_lab
