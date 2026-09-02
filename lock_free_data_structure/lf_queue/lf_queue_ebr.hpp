@@ -92,14 +92,13 @@ private:
 };
 
 template <typename DataType> LFQueueBasic<DataType>::~LFQueueBasic() {
-  // 析构时从 hidden_head_->next_ 开始（跳过 hidden_head 本身）
   Node *current = hidden_head_->next_.load();
   while (current != nullptr) {
     Node *next = current->next_.load();
     delete current;
     current = next;
   }
-  // 最后删除 hidden_head
+
   delete hidden_head_;
 }
 } // namespace lf_lab

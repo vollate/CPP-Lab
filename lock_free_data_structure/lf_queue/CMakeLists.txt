@@ -1,7 +1,8 @@
 find_package(benchmark CONFIG REQUIRED)
 
-file(GLOB GTEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/tests/**/*test*.cpp")
-file(GLOB BENCHMARK_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/tests/*bench*.cpp")
+file(GLOB_RECURSE GTEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp")
+list(FILTER GTEST_SOURCES EXCLUDE REGEX ".*bench.*\\.cpp$")
+file(GLOB_RECURSE BENCHMARK_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/tests/*bench*.cpp")
 
 foreach(source_file ${GTEST_SOURCES})
     get_filename_component(target_name ${source_file} NAME_WE)
@@ -13,8 +14,7 @@ endforeach()
 
 foreach(source_file ${BENCHMARK_SOURCES})
     get_filename_component(target_name ${source_file} NAME_WE)
-    add_executable(${target_name} ${source_file}
-            tests/unsafe_queue/unsafe_queue_test.cpp)
+    add_executable(${target_name} ${source_file})
     target_include_directories(${target_name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
     target_link_libraries(${target_name} PRIVATE benchmark::benchmark)
 endforeach()

@@ -36,3 +36,5 @@ build/
 .cache/
 compile_commands.json
 vcpkg_installed/
+
+.DS_Store
